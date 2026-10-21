@@ -88,6 +88,15 @@ describe('validateQuestion', () => {
     );
   });
 
+  it('rejects negative or fractional choices', () => {
+    expect(validateQuestion(question({ choices: [-1, 14, 15, 16] }))).toEqual([
+      'Choices must be non-negative whole numbers',
+    ]);
+    expect(validateQuestion(question({ choices: [14.5, 14, 15, 16] }))).toEqual([
+      'Choices must be non-negative whole numbers',
+    ]);
+  });
+
   it('rejects a question outside its difficulty level', () => {
     const tooBig = question({
       firstOperand: 12,

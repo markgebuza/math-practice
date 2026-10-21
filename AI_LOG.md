@@ -142,3 +142,35 @@ Report the test results and any rule that was hard to satisfy.
 - The "regenerate if over 1,000" rule for Level 4 division is in place but never triggers, because 25 × 40 = 1,000 exactly.
 - Immediate-repetition avoidance (DECISIONS 7) belongs to TODO line 272 (session phase), so it is not done here.
 - Statistical tests (zero-factor share 3–20%, Level 3 two-digit share 35–65%, every operation used) use wide bounds; a false failure is extremely unlikely but not impossible since `Math.random` is not seeded.
+
+### [2026-10-21 14:58] Phase 5: Multiple-Choice Answers
+**My prompt:**
+Implement Phase 5 (tasks 17–19). Use operation-specific distractors as the TODO
+describes, with a retry limit and a safe fallback.
+
+Write tests for edge cases near zero (0 + 0, 1 − 1, 0 × 5, 0 ÷ 3, 1 × 1) where there
+are few plausible wrong answers: there must still be exactly four unique, nonnegative,
+whole-number choices with the correct answer exactly once. Also test that across
+1,000 questions the correct answer appears in each of the four positions roughly 25%
+of the time.
+
+**What you did:**
+- Run by a Claude Code subagent using the Phase 5 prompt from PROMPTS.md (not manually tested by me before commit).
+- Tasks 17–19: only the temporary Phase 4 placeholder existed (correct answer + 3 nearby numbers in `questionGenerator.ts`). Removed it and added `src/services/distractors.ts` with `generateDistractors(operation, a, b)` and `buildChoices(operation, a, b)`; `generateQuestion` now uses `buildChoices`.
+- Distractor candidates per operation, shuffled, then filtered (whole, ≥ 0, not the answer, no duplicates), first 3 kept. Addition: answer ±1, ±10, "forgot to carry" (47 + 38 → 75), "subtracted instead" (9). Subtraction: answer ±1, ±10, "smaller digit from larger" borrow mistake (52 − 17 → 45), "added instead" (69). Multiplication: neighboring table facts a × (b ± 1), (a ± 1) × b, answer ±1, "added instead". Division (fact family): quotient ±1, ±2, the divisor, a ÷ (b ± 1) when whole, a − b.
+- If fewer than 3 survive (near zero), up to `MAX_DISTRACTOR_ATTEMPTS` (20) random nearby numbers (±1 to ±5) are tried, then a guaranteed fallback counts up from answer + 1. It throws `RangeError` if the answer itself is not a non-negative whole number, so the fallback can never loop forever.
+- `validateQuestion` now also rejects negative or fractional choices (new rule + test). Added `src/test/seededRandom.ts` (mulberry32 seeded `Math.random` spy) so the statistical tests are deterministic.
+- Tests: `src/services/distractors.test.ts` (16 tests): the five near-zero cases × 200 runs each; 3 valid distractors for 200 questions per operation per level; one test per operation proving the specific mistakes appear and nothing else does; retry-limit/fallback test with `Math.random` stuck at 0; RangeError on bad input; answer-position test. Commands: `npx prettier --write .`, `npm run lint`, `npm test -- --run`, `npm run build`, `npx prettier --check .`.
+
+**Verification:**
+- `npm run lint`: pass, 0 errors, 0 warnings. `npx prettier --check .`: clean.
+- `npm test -- --run`: 12 files, 114/114 passed (97 before, 17 new) on the first run. The answer-position test uses a seeded random generator (seed 2026) over 1,000 questions mixed across all operations and levels and requires each position to get between 200 and 300 hits (25% ± 5%), so it is deterministic and cannot fail randomly.
+- `npm run build`: pass (JS 322.77 kB, 101.39 kB gzip; unchanged because no page shows questions yet). No screenshots: this phase has no UI.
+- All 16 Phase 5 TODO items checked off (each is covered by a test).
+- Manual checklist for you: nothing new on screen yet (answer buttons come in Phase 6). Run `npm test -- --run src/services/distractors` and read `src/services/distractors.ts` to judge whether the wrong answers feel plausible for a 7–12 year old (e.g. for 7 × 8 the options come from 48, 49, 55, 57, 63, 64, 15).
+
+**Problems / open issues:**
+- Not covered by DECISIONS (chose the conservative option): which mistakes count as "plausible" is my choice (listed above). All candidate mistakes are treated equally (random pick), not weighted. Distractors are not limited to the level's answer range, so e.g. "added instead" can be far from the answer on Level 4 subtraction.
+- `0 ÷ 3` is tested at the distractor level only; the generator never makes it because DECISIONS 1.6 forbids quotient 0.
+- Zero-factor multiplication at Levels 1–2 (DECISIONS 1.5) still passes: 0 × 5 gets choices like 0, 1, 5 and a nearby number.
+- Phase 13 (similar questions) can reuse `buildChoices` from `src/services/distractors.ts`.

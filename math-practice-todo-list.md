@@ -161,28 +161,28 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 
 ### 17. Generate Incorrect Answer Choices
 
--   [ ] Generate three incorrect answers.
--   [ ] Ensure distractors differ from the correct answer.
--   [ ] Ensure all choices are unique.
--   [ ] Keep distractors plausible.
--   [ ] Respect nonnegative and whole-number constraints.
--   [ ] Add a retry limit to avoid infinite loops.
+-   [x] Generate three incorrect answers.
+-   [x] Ensure distractors differ from the correct answer.
+-   [x] Ensure all choices are unique.
+-   [x] Keep distractors plausible.
+-   [x] Respect nonnegative and whole-number constraints.
+-   [x] Add a retry limit to avoid infinite loops.
 
 ### 18. Add Operation-Specific Distractors
 
--   [ ] Add nearby-number distractors.
--   [ ] Add common addition mistakes.
--   [ ] Add common subtraction mistakes.
--   [ ] Add multiplication-table distractors.
--   [ ] Add division fact-family distractors.
--   [ ] Test edge cases near zero.
+-   [x] Add nearby-number distractors.
+-   [x] Add common addition mistakes.
+-   [x] Add common subtraction mistakes.
+-   [x] Add multiplication-table distractors.
+-   [x] Add division fact-family distractors.
+-   [x] Test edge cases near zero.
 
 ### 19. Shuffle Answer Choices
 
--   [ ] Combine the correct answer and distractors.
--   [ ] Shuffle all four choices.
--   [ ] Verify the correct answer appears exactly once.
--   [ ] Test for predictable answer positions.
+-   [x] Combine the correct answer and distractors.
+-   [x] Shuffle all four choices.
+-   [x] Verify the correct answer appears exactly once.
+-   [x] Test for predictable answer positions.
 
 ## Phase 6: Question Card
 

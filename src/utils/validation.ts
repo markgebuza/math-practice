@@ -81,6 +81,9 @@ export function validateQuestion(question: Question): string[] {
   if (choices.length !== 4) {
     errors.push('There must be exactly four choices');
   }
+  if (!choices.every((choice) => Number.isInteger(choice) && choice >= 0)) {
+    errors.push('Choices must be non-negative whole numbers');
+  }
   if (new Set(choices).size !== choices.length) {
     errors.push('Choices must be unique');
   }

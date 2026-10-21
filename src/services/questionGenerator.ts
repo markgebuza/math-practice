@@ -5,6 +5,7 @@ import { randomInt, randomItem } from '../utils/math';
 import { shuffle } from '../utils/shuffle';
 import { calculateAnswer, validateQuestion } from '../utils/validation';
 import { DIFFICULTY_RANGES, type Range } from './difficultyRanges';
+import { buildChoices } from './distractors';
 
 export const MAX_GENERATION_ATTEMPTS = 20;
 
@@ -66,16 +67,6 @@ const OPERAND_GENERATORS: Record<MathOperation, (difficulty: DifficultyLevel) =>
   division: generateDivisionOperands,
 };
 
-// Temporary nearby-number choices so every question is complete and valid.
-// Phase 5 replaces this with plausible, operation-specific distractors.
-function buildChoices(correctAnswer: number) {
-  const distractors = shuffle([-3, -2, -1, 1, 2, 3])
-    .map((offset) => correctAnswer + offset)
-    .filter((value) => value >= 0)
-    .slice(0, 3);
-  return shuffle([correctAnswer, ...distractors]);
-}
-
 function buildQuestion(operation: MathOperation, difficulty: DifficultyLevel): Question {
   const [firstOperand, secondOperand] = OPERAND_GENERATORS[operation](difficulty);
   const correctAnswer = calculateAnswer(operation, firstOperand, secondOperand);
@@ -86,7 +77,7 @@ function buildQuestion(operation: MathOperation, difficulty: DifficultyLevel): Q
     secondOperand,
     displayText: `${firstOperand} ${OPERATION_SYMBOLS[operation]} ${secondOperand}`,
     correctAnswer,
-    choices: buildChoices(correctAnswer),
+    choices: buildChoices(operation, firstOperand, secondOperand),
     difficulty,
     source: 'regular',
   };
