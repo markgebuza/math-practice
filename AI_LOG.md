@@ -76,3 +76,32 @@
 - "Add responsive spacing and child-friendly typography" (task 4) is left unchecked. The CSS exists, but I can't see the layout, so you need to check it at the three widths (step 7).
 - The font package includes Cyrillic/Vietnamese/Latin-ext files in `dist`. Browsers only download the Latin file the page uses, so it's harmless; could be trimmed in Phase 21.
 - React Router 8 requires Node ≥22.22. Netlify must use Node 22.22+ when we deploy (Phase 22).
+
+### [2026-10-21 14:49] Phase 2 tests + commit, Phase 3: Practice Configuration
+**My prompt:** run appropriate tests, then commit, then start phase 3
+**What you did:**
+- Re-ran lint, tests, build and format check for Phase 2 (all passed). Ran the production build with `vite preview` and took headless Chrome screenshots at 375/768/1280px. Plain headless screenshots at 375px looked cut off, but that was Chrome's ~500px minimum window width, not the app. Rendering the page inside 375px and 320px iframes showed no horizontal overflow. Checked off the last Phase 2 item (responsive spacing/typography).
+- Committed Phase 2 as `693d154` "Add child-friendly layout, home page, and routing (Phase 2)".
+- Phase 3: setup choices live in React Context. `src/app/practiceConfig.ts` holds the reducer, `isConfigReady`, `usePracticeConfig` and defaults from DECISIONS 4.2. `src/app/AppProvider.tsx` wraps the router in `App.tsx`. The state is plain serializable data, so Phase 18 can persist and restore it.
+- Built `src/components/setup/ChoiceTile.tsx` (a real checkbox/radio inside a big tile; selected tiles show a ✓ mark and thick border, not color alone; keyboard focus outline) plus `OperationSelector`, `DifficultySelector` and `SessionLengthSelector`. "Mixed operations" is the select-all toggle (DECISIONS 4.1). Level descriptions follow DECISIONS section 1. Labels live in `src/utils/labels.ts`.
+- `src/pages/PracticeSetupPage.tsx`: form with the three selectors. Start Session is disabled until at least one operation and a level are chosen; a `role="status"` message explains what's missing and is linked to the button with `aria-describedby`. Start goes to `/practice/session`, which for now lists the chosen configuration to prove it was passed.
+- Tests: `src/app/practiceConfig.test.ts` (7 reducer/readiness tests) and `src/pages/PracticeSetupPage.test.tsx` (10 component tests: defaults, multi-select, select-all on/off, Mixed un-checks when one is removed, disabled state + message, disabled until both choices, single difficulty, Space key, config reaches session page, choices kept after navigating away).
+**Verification:**
+- `npm run lint`: pass, 0 errors, 0 warnings. `npm run format:check`: clean.
+- `npm test -- --run`: 5 files, 35/35 passed. The first run had 6 failures, all caused by my test queries: I looked for "+ Addition", but the symbols are hidden from screen readers (`aria-hidden`), so the accessible name is "Addition". I fixed the tests, not the component.
+- `npm run build`: pass (JS 322.77 kB, 101.39 kB gzip).
+- Screenshots of the setup page at 375, 768 and 1024px: no overflow. I changed the tile grid from ~3 columns to 2 on wide screens so levels and lengths form even 2×2 grids.
+- All 19 Phase 3 TODO items checked off.
+- Manual checklist (`npm run dev`, go to Start Practice):
+  1. Addition, Level 1 and 10 questions are preselected (defaults from DECISIONS 4.2).
+  2. Click Subtraction and Division: several can be selected; each shows a ✓.
+  3. Click Mixed operations: all four turn on. Click it again: all turn off, Start Session greys out and the message "Pick at least one kind of math, then you can start!" appears.
+  4. Pick one operation again: the button turns green and the message disappears.
+  5. Only one level and one length can be selected at a time.
+  6. Keyboard only: Tab to a tile (purple outline around the whole tile), Space toggles it, arrow keys move between levels.
+  7. Choose something, click Start Session: the Practice page lists exactly what you picked. Go Home, then back to Practice: your choices are still there.
+**Problems / open issues:**
+- Prefilling the defaults means Start Session is enabled on first load, and difficulty (a radio group) can't be unselected once chosen. The "disabled until a level is chosen" path is tested with an empty starting configuration. Phase 11 will switch the prefill from the constant defaults to saved settings.
+- The choices survive navigation but not a page refresh yet. That's Phase 18, as planned.
+- The regular / mistake-review mode choice from spec 6.2 is TODO task 58, so it's left for Phase 14.
+- Phase 3 is not committed yet (waiting for your manual test).

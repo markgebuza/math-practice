@@ -2,11 +2,16 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
+import { AppProvider } from './AppProvider';
 import { routes } from './AppRoutes';
 
 function renderAt(path: string) {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
-  render(<RouterProvider router={router} />);
+  render(
+    <AppProvider>
+      <RouterProvider router={router} />
+    </AppProvider>,
+  );
   return router;
 }
 

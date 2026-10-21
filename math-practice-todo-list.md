@@ -78,34 +78,34 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 
 ### 7. Create the Operation Selector
 
--   [ ] Add addition, subtraction, multiplication, and division.
--   [ ] Allow multiple operations to be selected.
--   [ ] Add a select-all option.
--   [ ] Show selected states.
--   [ ] Support keyboard interaction.
+-   [x] Add addition, subtraction, multiplication, and division.
+-   [x] Allow multiple operations to be selected.
+-   [x] Add a select-all option.
+-   [x] Show selected states.
+-   [x] Support keyboard interaction.
 
 ### 8. Create the Difficulty Selector
 
--   [ ] Add Beginner, Easy, Intermediate, and Advanced.
--   [ ] Allow one level to be selected.
--   [ ] Show the selected level.
--   [ ] Add a short description for each level.
+-   [x] Add Beginner, Easy, Intermediate, and Advanced.
+-   [x] Allow one level to be selected.
+-   [x] Show the selected level.
+-   [x] Add a short description for each level.
 
 ### 9. Create the Session-Length Selector
 
--   [ ] Add 5 questions.
--   [ ] Add 10 questions.
--   [ ] Add 20 questions.
--   [ ] Add continuous practice.
--   [ ] Set a default.
+-   [x] Add 5 questions.
+-   [x] Add 10 questions.
+-   [x] Add 20 questions.
+-   [x] Add continuous practice.
+-   [x] Set a default.
 
 ### 10. Build the Practice Setup Page
 
--   [ ] Combine operation, difficulty, and session-length selectors.
--   [ ] Add **Start Session**.
--   [ ] Disable it until required choices are made.
--   [ ] Show validation feedback.
--   [ ] Pass configuration to the session.
+-   [x] Combine operation, difficulty, and session-length selectors.
+-   [x] Add **Start Session**.
+-   [x] Disable it until required choices are made.
+-   [x] Show validation feedback.
+-   [x] Pass configuration to the session.
 
 ## Phase 4: Basic Math Question Generation
 
