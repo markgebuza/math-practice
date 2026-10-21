@@ -47,3 +47,32 @@
 - Manual: look over the `git status` list before committing. No secrets or `.env` files are in it.
 **Problems / open issues:**
 - Your home folder (`C:\Users\mgebu`) is also a git repository. This new repo is nested inside it. Git treats them separately, but the home repo will show `Downloads/` as untracked.
+
+### [2026-10-21 14:41] Phase 1 commit + Phase 2: Basic Interface
+**My prompt:** commit phase 1 and move to phase 2
+**What you did:**
+- Committed Phase 1 as `378160c` "Set up Vite React + TypeScript project (Phase 1)" (everything, including the TODO and AI_LOG.md).
+- Git warned about LF→CRLF conversion (your global `core.autocrlf=true`), which would break Prettier's line-ending check on checkout. Added `.gitattributes` with `* text=auto eol=lf`.
+- Installed `react-router` 8.5.0 and `@fontsource-variable/nunito` 5.3.0 (OFL-1.1 license; the font is bundled with the app, so there are no requests to Google Fonts). React Router 8 needs Node ≥22.22, so I raised `engines` in `package.json` to match.
+- Visual design (`src/index.css`): cream background, navy text, blue/yellow/green/purple accents, Nunito font, rounded shapes, fluid text size, visible 4px focus outlines, reduced-motion support. Built reusable `Button`/`ButtonLink` (min 48px tall, 64px for large; hover lifts, pressed pushes down, disabled is dimmed), `PageContainer` (main landmark, h1, browser tab title), `Header` with a skip link, `Navigation` (active page is underlined and has `aria-current`, not shown by color alone), `AppLayout` and `EmptyState`.
+- Routes in `src/app/AppRoutes.tsx` using a data router (`createBrowserRouter`) from the start, so Phase 18's navigation blocking won't need a router switch. Home page with welcome text and three large buttons; friendly placeholder pages for the other five routes; friendly not-found page with Go Home.
+- Tests: `src/app/AppRoutes.test.tsx` (each route renders, not-found, home buttons navigate, active nav link, tab title), `src/components/common/Button.test.tsx` (click, Enter/Space, disabled, classes, link). Updated `src/app/App.test.tsx`.
+**Verification:**
+- `npm run lint`: pass, 0 errors, 0 warnings.
+- `npm test -- --run`: 3 files, 18/18 tests passed.
+- `npm run build`: pass (JS 317.47 kB, 99.87 kB gzip; CSS 6.67 kB; Nunito font files bundled locally).
+- WCAG contrast computed with a script: body text 14.0:1, muted text 7.3:1, white on blue 6.4:1, navy on yellow 9.7:1, white on green 5.3:1 (all ≥ 4.5 AA). Focus outline 6.7:1 on the page and 4.2:1 on the blue header (non-text needs ≥ 3:1).
+- Dev server returned HTTP 200 for all six routes and an unknown URL when typed directly.
+- 13 of 14 Phase 2 TODO items checked off.
+- Manual checklist for you (`npm run dev`, http://localhost:5173):
+  1. Type each URL into the address bar and press Enter: `/`, `/practice/setup`, `/practice/session`, `/practice/summary`, `/statistics`, `/settings`. Each shows its own heading with the blue header on top.
+  2. Type `/abc` and check you get "Oops! Page Not Found", then that Go Home works.
+  3. On Home, click Start Practice, View Statistics and Settings. Each goes to the right page; the browser Back button returns home.
+  4. Press Tab from the top of the page. The first Tab shows "Skip to main content". Every link and button gets a clearly visible outline (yellow in the header, purple on the page). Enter activates them.
+  5. Hover a big button (it lifts) and hold the mouse down (it presses down).
+  6. Check the current page is underlined in the header nav.
+  7. In DevTools device mode, try 375px, 768px and 1280px widths: no sideways scrolling, nav wraps neatly, buttons stay big.
+**Problems / open issues:**
+- "Add responsive spacing and child-friendly typography" (task 4) is left unchecked. The CSS exists, but I can't see the layout, so you need to check it at the three widths (step 7).
+- The font package includes Cyrillic/Vietnamese/Latin-ext files in `dist`. Browsers only download the Latin file the page uses, so it's harmless; could be trimmed in Phase 21.
+- React Router 8 requires Node ≥22.22. Netlify must use Node 22.22+ when we deploy (Phase 22).

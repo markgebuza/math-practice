@@ -49,27 +49,27 @@ Suggested files: `src/types/question.ts`, `session.ts`, `statistics.ts`,
 
 ### 4. Create the Shared Page Layout
 
--   [ ] Create a reusable page container.
--   [ ] Create the header and navigation.
--   [ ] Add the application title.
--   [ ] Define shared button styles.
--   [ ] Add responsive spacing and child-friendly typography.
+-   [x] Create a reusable page container.
+-   [x] Create the header and navigation.
+-   [x] Add the application title.
+-   [x] Define shared button styles.
+-   [x] Add responsive spacing and child-friendly typography.
 
 ### 5. Create the Home Page
 
--   [ ] Add a welcome message.
--   [ ] Add **Start Practice**.
--   [ ] Add **View Statistics**.
--   [ ] Add **Settings**.
--   [ ] Make buttons keyboard accessible.
+-   [x] Add a welcome message.
+-   [x] Add **Start Practice**.
+-   [x] Add **View Statistics**.
+-   [x] Add **Settings**.
+-   [x] Make buttons keyboard accessible.
 
 ### 6. Add Application Routing
 
--   [ ] Install React Router.
--   [ ] Create routes for home, setup, session, summary, statistics, and
+-   [x] Install React Router.
+-   [x] Create routes for home, setup, session, summary, statistics, and
     settings.
--   [ ] Connect navigation buttons.
--   [ ] Add a not-found route.
+-   [x] Connect navigation buttons.
+-   [x] Add a not-found route.
 
 Routes: `/`, `/practice/setup`, `/practice/session`,
 `/practice/summary`, `/statistics`, `/settings`.

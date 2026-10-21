@@ -1,10 +1,11 @@
+import { createBrowserRouter } from 'react-router';
+import { RouterProvider } from 'react-router/dom';
+import { routes } from './AppRoutes';
+
+const router = createBrowserRouter(routes);
+
 function App() {
-  return (
-    <main>
-      <h1>Math Practice</h1>
-      <p>Let&apos;s practice some math!</p>
-    </main>
-  );
+  return <RouterProvider router={router} />;
 }
 
 export default App;

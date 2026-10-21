@@ -1,0 +1,70 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-height: 48px;
+  padding: 0.625rem 1.5rem;
+  border: 3px solid transparent;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-raised);
+  font: inherit;
+  font-weight: 800;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.1s ease,
+    background-color 0.15s ease;
+}
+
+.button--lg {
+  min-height: 64px;
+  padding: 0.875rem 2rem;
+  font-size: 1.375rem;
+}
+
+.button--primary {
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+}
+
+.button--secondary {
+  background: var(--color-secondary);
+  color: var(--color-secondary-text);
+  border-color: var(--color-text);
+}
+
+.button--success {
+  background: var(--color-success);
+  color: var(--color-success-text);
+}
+
+.button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 rgba(31, 37, 71, 0.25);
+}
+
+.button--primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.button--secondary:hover:not(:disabled) {
+  background: var(--color-secondary-hover);
+}
+
+.button--success:hover:not(:disabled) {
+  background: var(--color-success-hover);
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 rgba(31, 37, 71, 0.25);
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  box-shadow: none;
+}

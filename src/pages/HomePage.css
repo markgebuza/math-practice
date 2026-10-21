@@ -1,0 +1,59 @@
+.home {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  text-align: center;
+}
+
+.home__symbols {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.home__symbol {
+  display: grid;
+  place-items: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-raised);
+  font-size: 2.75rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.home__symbol--blue {
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+}
+
+.home__symbol--yellow {
+  background: var(--color-secondary);
+  color: var(--color-secondary-text);
+}
+
+.home__symbol--green {
+  background: var(--color-success);
+  color: var(--color-success-text);
+}
+
+.home__symbol--purple {
+  background: var(--color-focus);
+  color: #ffffff;
+}
+
+.home__welcome {
+  max-width: 36rem;
+  font-size: 1.375rem;
+}
+
+.home__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  max-width: 22rem;
+}
