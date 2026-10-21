@@ -111,51 +111,51 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 
 ### 11. Create Question Utilities
 
--   [ ] Create a random integer utility.
--   [ ] Create an array-shuffling utility.
--   [ ] Create a unique-ID utility.
--   [ ] Add unit tests.
+-   [x] Create a random integer utility.
+-   [x] Create an array-shuffling utility.
+-   [x] Create a unique-ID utility.
+-   [x] Add unit tests.
 
 ### 12. Implement Addition Questions
 
--   [ ] Generate operands.
--   [ ] Apply difficulty constraints.
--   [ ] Calculate the answer and display text.
--   [ ] Return a valid `Question`.
--   [ ] Test operand and result boundaries.
+-   [x] Generate operands.
+-   [x] Apply difficulty constraints.
+-   [x] Calculate the answer and display text.
+-   [x] Return a valid `Question`.
+-   [x] Test operand and result boundaries.
 
 ### 13. Implement Subtraction Questions
 
--   [ ] Generate operands.
--   [ ] Prevent negative answers initially.
--   [ ] Apply difficulty constraints.
--   [ ] Calculate answer and display text.
--   [ ] Test that the first operand is not smaller than the second.
+-   [x] Generate operands.
+-   [x] Prevent negative answers initially.
+-   [x] Apply difficulty constraints.
+-   [x] Calculate answer and display text.
+-   [x] Test that the first operand is not smaller than the second.
 
 ### 14. Implement Multiplication Questions
 
--   [ ] Generate factors.
--   [ ] Apply difficulty constraints.
--   [ ] Calculate the product.
--   [ ] Return a valid question.
--   [ ] Test factor ranges at every level.
+-   [x] Generate factors.
+-   [x] Apply difficulty constraints.
+-   [x] Calculate the product.
+-   [x] Return a valid question.
+-   [x] Test factor ranges at every level.
 
 ### 15. Implement Division Questions
 
--   [ ] Generate a nonzero divisor.
--   [ ] Generate a whole-number quotient.
--   [ ] Calculate dividend as divisor × quotient.
--   [ ] Apply difficulty constraints.
--   [ ] Ensure division by zero and fractional answers cannot occur.
+-   [x] Generate a nonzero divisor.
+-   [x] Generate a whole-number quotient.
+-   [x] Calculate dividend as divisor × quotient.
+-   [x] Apply difficulty constraints.
+-   [x] Ensure division by zero and fractional answers cannot occur.
 
 ### 16. Create the Main Question Generator
 
--   [ ] Accept operation and difficulty.
--   [ ] Call the correct operation-specific generator.
--   [ ] Randomly choose among selected operations.
--   [ ] Validate generated questions.
--   [ ] Handle generation failures.
--   [ ] Test all operations and difficulty levels.
+-   [x] Accept operation and difficulty.
+-   [x] Call the correct operation-specific generator.
+-   [x] Randomly choose among selected operations.
+-   [x] Validate generated questions.
+-   [x] Handle generation failures.
+-   [x] Test all operations and difficulty levels.
 
 ## Phase 5: Multiple-Choice Answers
 

@@ -105,3 +105,40 @@
 - The choices survive navigation but not a page refresh yet. That's Phase 18, as planned.
 - The regular / mistake-review mode choice from spec 6.2 is TODO task 58, so it's left for Phase 14.
 - Phase 3 is not committed yet (waiting for your manual test).
+
+### [2026-10-21 14:55] Phase 4: Basic Math Question Generation
+**My prompt:**
+Implement Phase 4 (tasks 11–16) using the ranges in spec section 7 and DECISIONS.md.
+Put all difficulty ranges in ONE config file so they're easy to review.
+
+Add a validateQuestion function implementing the "before displaying a question" rules
+in spec section 17. Then write property-style tests that generate 1,000 questions for every
+operation at every difficulty level and assert:
+- operands and results stay within that level's ranges,
+- subtraction never goes negative (unless DECISIONS.md enables it),
+- division never divides by zero and always gives a whole-number answer,
+- every question passes validateQuestion.
+Report the test results and any rule that was hard to satisfy.
+
+**What you did:**
+- Run by a Claude Code subagent using the Phase 4 prompt from PROMPTS.md (not manually tested by me before commit).
+- Tasks 11–16 all started from scratch (only empty `.gitkeep` folders existed). Utilities: `src/utils/math.ts` (`randomInt`, `randomItem`), `src/utils/shuffle.ts` (Fisher–Yates, returns a copy), `src/utils/ids.ts` (`crypto.randomUUID()` with a timestamp+random fallback, DECISIONS 7).
+- All ranges live in ONE file, `src/services/difficultyRanges.ts` (`DIFFICULTY_RANGES`), copied from DECISIONS 1.1–1.7: addition/subtraction operand ranges and result caps, multiplication "shapes" (e.g. Level 3 = 2–9 × 2–9 or 2–9 × 10–20, random order) plus a 10% zero-factor chance at Levels 1–2, division divisor/quotient ranges and max dividend.
+- `src/services/questionGenerator.ts`: one operand generator per operation; `generateQuestion(operation, difficulty)` builds the question (id, display text like `7 × 8` with the U+2212 minus, answer, choices, `source: 'regular'`), validates it, retries up to 20 times, then throws `QuestionGenerationError`. `generateQuestionFromOperations(operations, difficulty)` picks one selected operation at random. Division is built as `dividend = divisor × quotient`; subtraction picks the second operand from 0 to the first.
+- `src/utils/validation.ts`: `validateQuestion(question)` returns the list of broken spec-17 rules (empty = valid): supported operation/level, whole operands, no division by zero, whole division answer, correct answer is a non-negative whole number equal to the real result, exactly four unique choices, exactly one correct choice, fits the level's ranges.
+- Tests: `math.test.ts`, `shuffle.test.ts`, `ids.test.ts`, `validation.test.ts` (11 cases, one per rule), `questionGenerator.test.ts` (1,000 questions per operation per level checked against ranges written out separately from DECISIONS so a typo in the config file would fail; 1,000 more per operation/level through `validateQuestion`; zero-factor share; Level 3 one-digit/two-digit mix; unique ids; operation picking), `questionGenerator.retry.test.ts` (mocks the validator to prove the retry limit and the error).
+- Commands: `npx prettier --write .`, `npm run lint`, `npm test -- --run`, `npm run build`, `npx prettier --check .`. Removed the now-unneeded `.gitkeep` in `src/services` and `src/utils`.
+
+**Verification:**
+- `npm run lint`: pass, 0 errors, 0 warnings. `npx prettier --check .`: clean.
+- `npm test -- --run`: 11 files, 97/97 passed (35 before, 62 new) on the first run. That includes 32,000 generated questions (16 range checks + 16 validation checks × 1,000).
+- `npm run build`: pass (JS 322.77 kB, 101.39 kB gzip, unchanged because no page uses the generator yet).
+- All 30 Phase 4 TODO items checked off (each is covered by a unit test).
+- Manual checklist for you: there is nothing new on screen in this phase. You can review the numbers in `src/services/difficultyRanges.ts` against DECISIONS.md section 1, and run `npm test -- --run src/services` to see the generator tests on their own.
+
+**Problems / open issues:**
+- Rules that were hard to satisfy: (1) "Exactly four unique choices" can't pass without distractors, which are Phase 5. I added a temporary `buildChoices` (correct answer plus 3 shuffled nearby numbers within ±3, never negative) so every question is complete and valid; Phase 5 must replace it. No Phase 5 TODO items were checked off. (2) "Question fits the selected difficulty" for multiplication needed a special case: a 0 factor is outside the normal 1–5 / 1–10 shapes but allowed at Levels 1–2 (DECISIONS 1.5), so the validator accepts 0 only where the config has a zero-factor chance.
+- Not covered by DECISIONS (chose the conservative option): addition picks the first operand evenly, then the second from 0 up to whatever keeps the sum under the cap. At Level 4 this makes big second operands rarer when the first is big. Display text has no "= ?" (the card can add it in Phase 6).
+- The "regenerate if over 1,000" rule for Level 4 division is in place but never triggers, because 25 × 40 = 1,000 exactly.
+- Immediate-repetition avoidance (DECISIONS 7) belongs to TODO line 272 (session phase), so it is not done here.
+- Statistical tests (zero-factor share 3–20%, Level 3 two-digit share 35–65%, every operation used) use wide bounds; a false failure is extremely unlikely but not impossible since `Math.random` is not seeded.
