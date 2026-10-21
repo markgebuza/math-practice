@@ -174,3 +174,40 @@ of the time.
 - `0 ÷ 3` is tested at the distractor level only; the generator never makes it because DECISIONS 1.6 forbids quotient 0.
 - Zero-factor multiplication at Levels 1–2 (DECISIONS 1.5) still passes: 0 × 5 gets choices like 0, 1, 5 and a nearby number.
 - Phase 13 (similar questions) can reuse `buildChoices` from `src/services/distractors.ts`.
+
+### [2026-10-21 15:10] Phase 6: Question Card
+**My prompt:**
+Implement Phase 6 (tasks 20–25). The card back must also show a brief explanation as
+described in DECISIONS.md (we'll connect it to the "show explanations" setting in Phase 11).
+
+Requirements to verify with component tests:
+- Flip Card is disabled until an answer is selected; the answer can change before flipping
+  but not after.
+- I Got It Right / I Got It Wrong can't be submitted twice (test a fast double-click).
+- With animation off or prefers-reduced-motion set, the card still works and the answer
+  is still clearly shown.
+- No mirrored or overlapping text on the back of the card.
+Show the card on the practice page with a generated question so I can try it.
+
+**What you did:**
+- Run by a Claude Code subagent using the Phase 6 prompt from PROMPTS.md (not manually tested by me before commit).
+- Tasks 20–25 all started from scratch (only an empty `src/components/practice/.gitkeep` existed). Added `src/components/practice/AnswerChoice.tsx` (button with `aria-pressed`, label "Answer 56", ✓ mark when selected so it is not color alone, 72px tall), `CardFront.tsx` ("Question X of Y", big `7 × 8 = ?` with screen-reader text "What is 7 times 8?", four choices, Flip Card disabled with the hint "Pick an answer, then flip the card."), `CardBack.tsx` (`7 × 8 = 56`, "Correct answer" and "Your answer" boxes, explanation, I Got It Right / I Got It Wrong), and `QuestionCard.tsx` + `.css`.
+- `QuestionCard` holds `selectedAnswer`, `isCardFlipped` and `submitted`; it is keyed by the question id so everything resets for a new question. A ref blocks a second result click that arrives before React re-renders, so a result is reported only once. After flipping, focus moves to the back's heading so screen readers read the answer. Props `showExplanations` and `animationEnabled` (both default on) are ready for Phase 11.
+- Flip animation: both faces share one CSS grid cell (aligned, card as tall as the taller face), the card turns 180° and the back face is pre-turned 180°, `backface-visibility: hidden`, and the face turning away gets `visibility: hidden` at the halfway point plus `inert`/`aria-hidden`, so mirrored text can't show even if backface hiding fails. With animation off or `prefers-reduced-motion` (new hook `src/hooks/usePrefersReducedMotion.ts`), only the current face is rendered, with no transform.
+- Explanations (DECISIONS 5) in `src/utils/explanations.ts` (`explainQuestion`, plus `spokenQuestion` for screen-reader text using the new `OPERATION_WORDS` in `labels.ts`). `src/pages/PracticePage.tsx` (+ `PracticePage.css`) now shows a card with a question generated from the chosen setup (in the state initializer, not in render), a supportive message after self-reporting, and **Try Another Question** up to the chosen session length; the "Your choices" list and Change My Choices stay below. Incomplete setup shows a friendly message and a link to setup.
+- Tests: `src/utils/explanations.test.ts` (8), `src/components/practice/QuestionCard.test.tsx` (18), `src/pages/PracticePage.test.tsx` (4, seeded random). Removed `src/hooks/.gitkeep` and `src/components/practice/.gitkeep`. Commands: `npx prettier --write .`, `npm run lint`, `npm test -- --run`, `npm run build`, `npx vite preview --port 4179` + headless Chrome screenshots (server stopped afterwards).
+
+**Verification:**
+- `npm run lint`: pass, 0 errors, 0 warnings.
+- `npm test -- --run`: 15 files, 144/144 passed (114 before, 30 new). The first run of the new card tests had 5 failures, all in my test expectations, not the component: jsdom reports `transform: none` (not an empty string) and does not implement the `inert` property (checked the attribute instead), and a hidden button's accessible name can't be queried by role (used a selector). Fixed and re-ran: all passed.
+- Prompt requirements covered by component tests: Flip Card disabled until a choice is made, choice can change before flipping and not after (front is disabled, inert and hidden); fast double-click and three synchronous clicks report exactly once; with `animationEnabled={false}` and with a mocked `prefers-reduced-motion: reduce`, the card flips, focuses and shows correct/selected answers; mirrored/overlap check reads the computed CSS in jsdom (card turned 180° + back pre-turned 180°, `backface-visibility: hidden` on both faces, both faces in grid cell `1 / 1`, front hidden after flip).
+- `npm run build`: pass (JS 335.02 kB, 105.03 kB gzip; CSS 12.71 kB).
+- Screenshots (375px and 1280px iframes, served from a throwaway page copied into the git-ignored `dist/` and deleted afterwards; no debug code in `src`): front, selected (blue fill + ✓), flipped back, after reporting, and with `--force-prefers-reduced-motion`. Back text reads normally, nothing overlaps; one capture taken mid-flip showed the front turning in perspective, not mirrored. Changed the answer boxes to keep their numbers aligned when "Correct answer" wraps at 375px.
+- 31 of 33 Phase 6 TODO items checked off. Left unchecked: "Add hover and focus states" (styles exist but hover/keyboard focus look needs a real browser check by you) and "Add an animation setting" (only a prop so far; the Settings toggle is Phase 11).
+- Manual checklist for you: (1) `npm run dev`, Start Session from setup: a card with a question from your choices appears. (2) Flip Card is greyed out until you pick an answer; you can change the pick; the chosen one turns blue with a ✓. (3) Flip: the card turns smoothly and the back reads normally (no backwards text), showing the question with its answer, Correct answer, Your answer, and an explanation. (4) Double-click I Got It Right quickly: one message only, both buttons grey out. (5) Try Another Question gives a fresh card at Question 2; after the last one there is no Try Another button. (6) Keyboard only: Tab to choices, Space picks, Enter on Flip Card, focus lands on the answer heading. (7) Turn on "Reduce motion" in Windows (Settings > Accessibility > Visual effects > Animation effects off) and reload: the back appears instantly. (8) Hover over choices and buttons: they lift; focus outline is purple. (9) Try a screen reader (Narrator) if you can: it should say "What is 7 times 8?" and read the answer after flipping.
+
+**Problems / open issues:**
+- Not covered by DECISIONS (chose the conservative option): "large second operand" means 10 or more; "crosses a ten" means the ones digits carry (addition) or the first ones digit is smaller (subtraction); Level 4 addition with hundreds still says "Add the tens, then the ones" exactly as DECISIONS 5 words it. The × 0 / × 1 sentences add the real fact ("…, so 6 × 0 = 0.").
+- The practice page is only a try-out: nothing is recorded or saved, and question numbering/Try Another is local page state. Phase 7 must replace it with the real session (recording, progress bar, repetition avoidance, redirect for missing setup). `ProgressBar.tsx` (spec 18) is TODO task 30 in Phase 7, so it is not added here. The "Your choices" list stays on the page because an existing setup test relies on it.
+- `showExplanations` and `animationEnabled` are props with default `true`; Phase 11 must pass the saved settings. Number keys 1–4 and live-region announcements are later accessibility tasks (TODO lines 563–572); for now focus moves to the back's heading after flipping, and to the new card after Try Another.
+- In the reported screenshot the focused back heading shows the purple focus outline because the test script clicked with JavaScript; with a real mouse click Chrome usually doesn't show it. Worth a look in your manual test.

@@ -188,53 +188,53 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 
 ### 20. Create the Answer Choice Component
 
--   [ ] Display each choice as a button.
--   [ ] Support selected and unselected states.
+-   [x] Display each choice as a button.
+-   [x] Support selected and unselected states.
 -   [ ] Add hover and focus states.
--   [ ] Use large touch targets.
--   [ ] Add accessible labels.
--   [ ] Prevent changes after the card is flipped.
+-   [x] Use large touch targets.
+-   [x] Add accessible labels.
+-   [x] Prevent changes after the card is flipped.
 
 ### 21. Create the Card Front
 
--   [ ] Display the arithmetic question.
--   [ ] Display four answer choices.
--   [ ] Display current question number and total.
--   [ ] Add a **Flip Card** button.
--   [ ] Disable flipping until an answer is selected.
--   [ ] Use large, readable math text.
+-   [x] Display the arithmetic question.
+-   [x] Display four answer choices.
+-   [x] Display current question number and total.
+-   [x] Add a **Flip Card** button.
+-   [x] Disable flipping until an answer is selected.
+-   [x] Use large, readable math text.
 
 ### 22. Add Answer Selection
 
--   [ ] Store the selected answer in state.
--   [ ] Highlight the selected choice.
--   [ ] Allow changing the choice before flipping.
--   [ ] Enable the flip button after selection.
--   [ ] Reset selection for each new question.
+-   [x] Store the selected answer in state.
+-   [x] Highlight the selected choice.
+-   [x] Allow changing the choice before flipping.
+-   [x] Enable the flip button after selection.
+-   [x] Reset selection for each new question.
 
 ### 23. Create the Card Back
 
--   [ ] Display the original question.
--   [ ] Display the correct answer.
--   [ ] Display the selected answer.
--   [ ] Add **I Got It Right**.
--   [ ] Add **I Got It Wrong**.
--   [ ] Prevent duplicate result submission.
+-   [x] Display the original question.
+-   [x] Display the correct answer.
+-   [x] Display the selected answer.
+-   [x] Add **I Got It Right**.
+-   [x] Add **I Got It Wrong**.
+-   [x] Prevent duplicate result submission.
 
 ### 24. Add Card-Flipping Behavior
 
--   [ ] Add `isCardFlipped` state.
--   [ ] Show the front before flipping and back after.
--   [ ] Prevent answer changes after flipping.
--   [ ] Reset flip state for the next question.
--   [ ] Ensure the card remains usable without animation.
+-   [x] Add `isCardFlipped` state.
+-   [x] Show the front before flipping and back after.
+-   [x] Prevent answer changes after flipping.
+-   [x] Reset flip state for the next question.
+-   [x] Ensure the card remains usable without animation.
 
 ### 25. Add the Flip Animation
 
--   [ ] Implement CSS flip animation.
--   [ ] Keep front and back aligned.
--   [ ] Prevent mirrored text.
--   [ ] Respect reduced-motion preferences.
+-   [x] Implement CSS flip animation.
+-   [x] Keep front and back aligned.
+-   [x] Prevent mirrored text.
+-   [x] Respect reduced-motion preferences.
 -   [ ] Add an animation setting.
 
 ## Phase 7: Practice Session

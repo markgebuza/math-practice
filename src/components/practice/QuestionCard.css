@@ -1,0 +1,155 @@
+.question-card {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+/* Both faces share one grid cell, so the card is as tall as the taller face and they stay aligned. */
+.question-card__inner {
+  display: grid;
+}
+
+.question-card__face {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-4) var(--space-3);
+  border: 3px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-raised);
+  text-align: center;
+}
+
+.question-card--animated {
+  perspective: 1400px;
+}
+
+.question-card--animated .question-card__inner {
+  transform-style: preserve-3d;
+  transition: transform 0.6s ease;
+}
+
+.question-card--animated.question-card--flipped .question-card__inner {
+  transform: rotateY(180deg);
+}
+
+.question-card--animated .question-card__face {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transition: visibility 0s linear 0s;
+}
+
+/* Turned the other way so its text reads normally once the card has flipped. */
+.question-card--animated .question-card__face--back {
+  transform: rotateY(180deg);
+}
+
+/* The face turning away is hidden at the halfway point, so mirrored text can never show. */
+.question-card--animated .question-card__face[aria-hidden='true'] {
+  visibility: hidden;
+  transition-delay: 0.3s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .question-card--animated .question-card__inner {
+    transition: none;
+  }
+}
+
+.question-card__progress {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-weight: 800;
+}
+
+.question-card__question {
+  margin: 0;
+  font-size: clamp(2.75rem, 2rem + 4vw, 4rem);
+  font-weight: 900;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.question-card__question:focus {
+  outline: none;
+}
+
+.question-card__question:focus-visible {
+  outline: 4px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+.question-card__choices {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-2);
+}
+
+@media (min-width: 30rem) {
+  .question-card__choices {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.question-card__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.question-card__hint {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.question-card__answers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.question-card__answer {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-1);
+  border: 3px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.question-card__answer dt {
+  color: var(--color-text-muted);
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.question-card__answer dd {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.question-card__explanation {
+  margin: 0;
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+}
+
+.question-card__prompt {
+  margin: 0;
+  font-weight: 800;
+}
+
+.question-card__results {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}

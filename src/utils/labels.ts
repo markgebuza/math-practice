@@ -23,6 +23,14 @@ export const OPERATION_SYMBOLS: Record<MathOperation, string> = {
   division: '÷',
 };
 
+// Screen-reader wording for the symbols (DECISIONS 7)
+export const OPERATION_WORDS: Record<MathOperation, string> = {
+  addition: 'plus',
+  subtraction: 'minus',
+  multiplication: 'times',
+  division: 'divided by',
+};
+
 export const DIFFICULTY_NAMES: Record<DifficultyLevel, string> = {
   1: 'Beginner',
   2: 'Easy',

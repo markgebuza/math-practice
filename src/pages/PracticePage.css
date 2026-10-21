@@ -1,0 +1,42 @@
+.practice-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  text-align: center;
+}
+
+.practice-page__feedback,
+.practice-page__note {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.practice-page__setup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.practice-page__choices {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-1) var(--space-3);
+  margin: 0;
+  padding: 0;
+  color: var(--color-text-muted);
+  font-size: 1rem;
+  list-style: none;
+}
+
+.practice-page__card {
+  width: 100%;
+}
+
+.practice-page__card:focus {
+  outline: none;
+}
