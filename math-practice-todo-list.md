@@ -241,50 +241,50 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 
 ### 26. Create Session State
 
--   [ ] Store session ID.
--   [ ] Store selected operations, difficulty, and length.
--   [ ] Store current question index.
--   [ ] Store session correct and incorrect totals.
--   [ ] Track whether the session is active.
+-   [x] Store session ID.
+-   [x] Store selected operations, difficulty, and length.
+-   [x] Store current question index.
+-   [x] Store session correct and incorrect totals.
+-   [x] Track whether the session is active.
 
 ### 27. Build the Practice Session Page
 
--   [ ] Read setup configuration.
--   [ ] Generate the first question.
--   [ ] Display the question card.
--   [ ] Handle missing or invalid configuration.
--   [ ] Redirect to setup if no valid session exists.
+-   [x] Read setup configuration.
+-   [x] Generate the first question.
+-   [x] Display the question card.
+-   [x] Handle missing or invalid configuration.
+-   [x] Redirect to setup if no valid session exists.
 
 ### 28. Record Self-Reported Results
 
--   [ ] Handle the right button.
--   [ ] Handle the wrong button.
--   [ ] Increment attempted total.
--   [ ] Increment correct or incorrect total.
--   [ ] Prevent duplicate recording.
--   [ ] Store the completed attempt.
+-   [x] Handle the right button.
+-   [x] Handle the wrong button.
+-   [x] Increment attempted total.
+-   [x] Increment correct or incorrect total.
+-   [x] Prevent duplicate recording.
+-   [x] Store the completed attempt.
 
 ### 29. Advance to the Next Question
 
--   [ ] Generate the next question after a result is recorded.
--   [ ] Increment question number.
--   [ ] Reset selected answer and flip state.
--   [ ] Avoid immediate repetition.
+-   [x] Generate the next question after a result is recorded.
+-   [x] Increment question number.
+-   [x] Reset selected answer and flip state.
+-   [x] Avoid immediate repetition.
 -   [ ] Add an optional short transition.
 
 ### 30. Add Session Progress
 
--   [ ] Display "Question X of Y".
--   [ ] Add a progress bar.
--   [ ] Update progress after each attempt.
--   [ ] Handle continuous practice without a fixed total.
+-   [x] Display "Question X of Y".
+-   [x] Add a progress bar.
+-   [x] Update progress after each attempt.
+-   [x] Handle continuous practice without a fixed total.
 -   [ ] Make progress accessible to screen readers.
 
 ### 31. Support Continuous Practice
 
--   [ ] Generate questions without a fixed endpoint.
--   [ ] Add **End Session**.
--   [ ] Confirm before ending if appropriate.
+-   [x] Generate questions without a fixed endpoint.
+-   [x] Add **End Session**.
+-   [x] Confirm before ending if appropriate.
 -   [ ] Show the summary when the session ends.
 
 ## Phase 8: Session Summary

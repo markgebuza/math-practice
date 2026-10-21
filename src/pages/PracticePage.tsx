@@ -1,103 +1,100 @@
 import { useEffect, useRef, useState } from 'react';
-import { isConfigReady, usePracticeConfig, type PracticeConfig } from '../app/practiceConfig';
-import { Button, ButtonLink } from '../components/common/Button';
-import { EmptyState } from '../components/common/EmptyState';
+import { Navigate } from 'react-router';
+import { Button } from '../components/common/Button';
+import { ConfirmDialog } from '../components/common/ConfirmDialog';
 import { PageContainer } from '../components/layout/PageContainer';
-import { QuestionCard, type QuestionCardResult } from '../components/practice/QuestionCard';
-import { generateQuestionFromOperations } from '../services/questionGenerator';
-import type { Question } from '../types';
+import { ProgressBar } from '../components/practice/ProgressBar';
+import { QuestionCard } from '../components/practice/QuestionCard';
+import { usePracticeSession } from '../hooks/usePracticeSession';
 import { DIFFICULTY_NAMES, OPERATION_LABELS } from '../utils/labels';
 import './PracticePage.css';
 
-function newQuestion(config: PracticeConfig): Question | null {
-  return isConfigReady(config) && config.difficulty !== null
-    ? generateQuestionFromOperations(config.operations, config.difficulty)
-    : null;
+export interface PracticeRedirectState {
+  noSession: true;
 }
 
-// A try-out of the question card. The full practice session (recording, progress) is Phase 7.
 export function PracticePage() {
-  const { config } = usePracticeConfig();
-  const [question, setQuestion] = useState(() => newQuestion(config));
-  const [questionNumber, setQuestionNumber] = useState(1);
-  const [result, setResult] = useState<QuestionCardResult | null>(null);
+  const {
+    currentSession: session,
+    currentQuestion: question,
+    currentQuestionIndex,
+    attempts,
+    isActive,
+    recordResult,
+    endSession,
+  } = usePracticeSession();
+  const [confirmingEnd, setConfirmingEnd] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+  const firstShownIndex = useRef(currentQuestionIndex);
 
-  // The Try Another button disappears when clicked, so move focus to the new card.
+  // The answered card is replaced by a new one, so move focus to it.
   useEffect(() => {
-    if (questionNumber > 1) {
+    if (currentQuestionIndex !== firstShownIndex.current) {
       cardRef.current?.focus();
     }
-  }, [questionNumber]);
+  }, [currentQuestionIndex]);
 
-  const operations = config.operations.map((op) => OPERATION_LABELS[op]).join(', ');
-  const difficulty = config.difficulty
-    ? `Level ${config.difficulty}: ${DIFFICULTY_NAMES[config.difficulty]}`
-    : 'none';
-  const length =
-    config.sessionLength === 'continuous' ? 'Keep going' : `${config.sessionLength} questions`;
-  const totalQuestions = config.sessionLength === 'continuous' ? undefined : config.sessionLength;
-  const hasMoreQuestions = totalQuestions === undefined || questionNumber < totalQuestions;
-
-  function handleTryAnother() {
-    setQuestion(newQuestion(config));
-    setQuestionNumber((n) => n + 1);
-    setResult(null);
+  if (!session) {
+    const state: PracticeRedirectState = { noSession: true };
+    return <Navigate to="/practice/setup" replace state={state} />;
+  }
+  if (!isActive || !question) {
+    return <Navigate to="/practice/summary" replace />;
   }
 
-  const choices = (
-    <ul className="practice-page__choices" aria-label="Your choices">
-      <li>Math: {operations || 'none'}</li>
-      <li>Level: {difficulty}</li>
-      <li>Questions: {length}</li>
-    </ul>
-  );
-
-  if (!question) {
-    return (
-      <PageContainer title="Practice">
-        <EmptyState message="Choose what to practice first, then your cards will show up here.">
-          {choices}
-          <ButtonLink to="/practice/setup">Change My Choices</ButtonLink>
-        </EmptyState>
-      </PageContainer>
-    );
-  }
+  const totalQuestions = session.sessionLength === 'continuous' ? undefined : session.sessionLength;
+  const lastAttempt = attempts.at(-1);
+  const questionNumber = currentQuestionIndex + 1;
 
   return (
     <PageContainer title="Practice">
       <div className="practice-page">
-        <div className="practice-page__card" ref={cardRef} tabIndex={-1}>
+        <ul className="practice-page__choices" aria-label="Your choices">
+          <li>Math: {session.operations.map((op) => OPERATION_LABELS[op]).join(', ')}</li>
+          <li>
+            Level: Level {session.difficulty}: {DIFFICULTY_NAMES[session.difficulty]}
+          </li>
+          <li>Questions: {totalQuestions ? `${totalQuestions} questions` : 'Keep going'}</li>
+        </ul>
+        {totalQuestions ? (
+          <ProgressBar answered={session.attempted} total={totalQuestions} />
+        ) : (
+          <p className="practice-page__count">
+            {session.attempted === 1
+              ? '1 question answered so far'
+              : `${session.attempted} questions answered so far`}
+          </p>
+        )}
+        <div key={question.id} className="practice-page__card" ref={cardRef} tabIndex={-1}>
           <QuestionCard
             question={question}
             questionNumber={questionNumber}
             totalQuestions={totalQuestions}
-            onResult={setResult}
+            onResult={recordResult}
           />
         </div>
         <div className="practice-page__feedback" role="status">
-          {result &&
-            (result.selfReportedCorrect
-              ? 'Great job! Thanks for checking your answer.'
-              : 'Thanks for being honest! Keep practicing, you are improving.')}
+          {lastAttempt &&
+            (lastAttempt.selfReportedCorrect
+              ? `Great job! Here is question ${questionNumber}.`
+              : `Thanks for being honest! You are improving. Here is question ${questionNumber}.`)}
         </div>
-        {result && hasMoreQuestions && (
-          <Button size="lg" onClick={handleTryAnother}>
-            Try Another Question
+        {!totalQuestions && (
+          <Button variant="secondary" size="lg" onClick={() => setConfirmingEnd(true)}>
+            End Session
           </Button>
         )}
-        {result && !hasMoreQuestions && (
-          <p className="practice-page__note">
-            You tried all {totalQuestions} questions. Full practice sessions are coming soon!
-          </p>
-        )}
-        <div className="practice-page__setup">
-          {choices}
-          <ButtonLink to="/practice/setup" variant="secondary">
-            Change My Choices
-          </ButtonLink>
-        </div>
       </div>
+      {confirmingEnd && (
+        <ConfirmDialog
+          title="End this session?"
+          message="You can see how you did on the summary page."
+          confirmLabel="Yes, End Session"
+          cancelLabel="Keep Practicing"
+          onConfirm={endSession}
+          onCancel={() => setConfirmingEnd(false)}
+        />
+      )}
     </PageContainer>
   );
 }

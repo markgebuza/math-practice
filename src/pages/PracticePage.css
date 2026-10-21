@@ -6,19 +6,18 @@
   text-align: center;
 }
 
-.practice-page__feedback,
-.practice-page__note {
+.practice-page__feedback {
+  min-height: 1.6em;
   margin: 0;
   font-size: 1.25rem;
   font-weight: 800;
 }
 
-.practice-page__setup {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-2);
-  margin-top: var(--space-2);
+.practice-page__count {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 1rem;
+  font-weight: 700;
 }
 
 .practice-page__choices {
@@ -35,8 +34,16 @@
 
 .practice-page__card {
   width: 100%;
+  animation: practice-card-in 0.3s ease-out;
 }
 
 .practice-page__card:focus {
   outline: none;
+}
+
+@keyframes practice-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
 }

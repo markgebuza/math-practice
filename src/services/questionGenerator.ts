@@ -113,3 +113,34 @@ export function generateQuestionFromOperations(
   }
   return generateQuestion(randomItem(operations), difficulty);
 }
+
+type QuestionFact = Pick<Question, 'operation' | 'firstOperand' | 'secondOperand'>;
+
+// DECISIONS 7: same operation and operands; for + and × the operand order does not matter.
+export function isSameQuestion(a: QuestionFact, b: QuestionFact) {
+  if (a.operation !== b.operation) {
+    return false;
+  }
+  if (a.firstOperand === b.firstOperand && a.secondOperand === b.secondOperand) {
+    return true;
+  }
+  const commutative = a.operation === 'addition' || a.operation === 'multiplication';
+  return commutative && a.firstOperand === b.secondOperand && a.secondOperand === b.firstOperand;
+}
+
+// Regenerates until the question differs from the previous one, up to the retry limit.
+export function generateNextQuestion(
+  operations: readonly MathOperation[],
+  difficulty: DifficultyLevel,
+  previous: QuestionFact | null,
+): Question {
+  let question = generateQuestionFromOperations(operations, difficulty);
+  for (
+    let attempt = 1;
+    previous && isSameQuestion(question, previous) && attempt < MAX_GENERATION_ATTEMPTS;
+    attempt++
+  ) {
+    question = generateQuestionFromOperations(operations, difficulty);
+  }
+  return question;
+}

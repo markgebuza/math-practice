@@ -1,5 +1,7 @@
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { isConfigReady, usePracticeConfig } from '../app/practiceConfig';
+import { usePracticeSession } from '../hooks/usePracticeSession';
+import type { PracticeRedirectState } from './PracticePage';
 import { Button } from '../components/common/Button';
 import { PageContainer } from '../components/layout/PageContainer';
 import { DifficultySelector } from '../components/setup/DifficultySelector';
@@ -22,17 +24,24 @@ function missingChoiceMessage(hasOperation: boolean, hasDifficulty: boolean) {
 
 export function PracticeSetupPage() {
   const { config } = usePracticeConfig();
+  const { startSession } = usePracticeSession();
   const navigate = useNavigate();
+  const redirectState = useLocation().state as PracticeRedirectState | null;
   const ready = isConfigReady(config);
   const message = missingChoiceMessage(config.operations.length > 0, config.difficulty !== null);
 
   return (
     <PageContainer title="Get Ready to Practice">
+      {redirectState?.noSession && (
+        <p className="setup__notice" role="status">
+          Let's get your cards ready! Choose what to practice, then press Start Session.
+        </p>
+      )}
       <form
         className="setup"
         onSubmit={(event) => {
           event.preventDefault();
-          if (ready) {
+          if (startSession(config)) {
             navigate('/practice/session');
           }
         }}

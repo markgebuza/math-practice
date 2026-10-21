@@ -19,7 +19,6 @@ describe('routes', () => {
   it.each([
     ['/', 'Math Practice'],
     ['/practice/setup', 'Get Ready to Practice'],
-    ['/practice/session', 'Practice'],
     ['/practice/summary', 'Session Summary'],
     ['/statistics', 'Your Statistics'],
     ['/settings', 'Settings'],

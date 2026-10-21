@@ -5,6 +5,11 @@ import {
   practiceConfigReducer,
   type PracticeConfig,
 } from './practiceConfig';
+import {
+  INITIAL_SESSION_STATE,
+  PracticeSessionContext,
+  practiceSessionReducer,
+} from './practiceSession';
 
 interface AppProviderProps {
   children: ReactNode;
@@ -16,7 +21,15 @@ export function AppProvider({
   initialPracticeConfig = DEFAULT_PRACTICE_CONFIG,
 }: AppProviderProps) {
   const [config, dispatch] = useReducer(practiceConfigReducer, initialPracticeConfig);
-  const value = useMemo(() => ({ config, dispatch }), [config]);
+  const configValue = useMemo(() => ({ config, dispatch }), [config]);
+  const [session, sessionDispatch] = useReducer(practiceSessionReducer, INITIAL_SESSION_STATE);
+  const sessionValue = useMemo(() => ({ state: session, dispatch: sessionDispatch }), [session]);
 
-  return <PracticeConfigContext.Provider value={value}>{children}</PracticeConfigContext.Provider>;
+  return (
+    <PracticeConfigContext.Provider value={configValue}>
+      <PracticeSessionContext.Provider value={sessionValue}>
+        {children}
+      </PracticeSessionContext.Provider>
+    </PracticeConfigContext.Provider>
+  );
 }

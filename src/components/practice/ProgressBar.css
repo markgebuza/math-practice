@@ -1,0 +1,25 @@
+.progress-bar {
+  width: 100%;
+  max-width: 640px;
+}
+
+.progress-bar__track {
+  height: 20px;
+  overflow: hidden;
+  border: 3px solid var(--color-text);
+  border-radius: 999px;
+  background: var(--color-surface);
+}
+
+.progress-bar__fill {
+  height: 100%;
+  background: var(--color-success);
+  transition: width 0.3s ease;
+}
+
+.progress-bar__label {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-muted);
+  font-size: 1rem;
+  font-weight: 700;
+}
