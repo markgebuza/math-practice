@@ -1,4 +1,4 @@
-import { act, render, screen, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
@@ -56,6 +56,13 @@ async function answer(result: 'I Got It Right' | 'I Got It Wrong' = 'I Got It Ri
   await userEvent.click(screen.getByRole('button', { name: result }));
 }
 
+async function tabTo(element: HTMLElement) {
+  for (let presses = 0; presses < 40 && document.activeElement !== element; presses++) {
+    await userEvent.tab();
+  }
+  expect(element).toHaveFocus();
+}
+
 const progress = () => screen.getByRole('progressbar', { name: 'Session progress' });
 
 afterEach(() => {
@@ -100,12 +107,91 @@ describe('PracticePage', () => {
     });
     expect(await screen.findByText('Question 2 of 5')).toBeInTheDocument();
     expect(progress()).toHaveAttribute('aria-valuenow', '1');
-    expect(screen.getByRole('status')).toHaveTextContent('Great job! Here is question 2.');
+    expect(screen.getByText('Great job! Here is question 2.')).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByRole('status')).toHaveTextContent(
+        /^Great job! Question 2 of 5: What is \d+ plus \d+\?$/,
+      ),
+    );
 
     await answer('I Got It Wrong');
     expect(screen.getByText('Question 3 of 5')).toBeInTheDocument();
     expect(progress()).toHaveAttribute('aria-valuenow', '2');
-    expect(screen.getByRole('status')).toHaveTextContent('Thanks for being honest!');
+    expect(
+      screen.getByText('Thanks for being honest! You are improving. Here is question 3.'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(
+      /^Thanks for being honest! You are improving\. Question 3 of 5: What is/,
+    );
+  });
+
+  it('announces each new question, the revealed answer and progress in one live region', async () => {
+    seedMathRandom(11);
+    await startSession({ operations: ['addition'], difficulty: 1, sessionLength: 5 });
+    expect(screen.getAllByRole('status')).toHaveLength(1);
+    const status = screen.getByRole('status');
+    const { firstOperand, secondOperand } = shownQuestion();
+    await waitFor(() =>
+      expect(status).toHaveTextContent(
+        `Question 1 of 5: What is ${firstOperand} plus ${secondOperand}?`,
+      ),
+    );
+
+    await userEvent.keyboard('2');
+    const group = screen.getByRole('group', { name: 'Choose an answer' });
+    const second = within(group).getAllByRole('button')[1];
+    expect(second).toHaveAttribute('aria-pressed', 'true');
+    expect(second).toHaveFocus();
+    const picked = Number(second.textContent!.replace('✓', ''));
+
+    await userEvent.click(screen.getByRole('button', { name: 'Flip Card' }));
+    expect(status).toHaveTextContent(
+      `Correct answer: ${firstOperand + secondOperand}. Your answer: ${picked}.`,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'I Got It Right' }));
+    expect(status).toHaveTextContent(/^Great job! Question 2 of 5: What is/);
+    expect(screen.getByRole('group', { name: 'Question 2' })).toHaveFocus();
+  });
+
+  it('ignores number keys while the end-session dialog is open', async () => {
+    seedMathRandom(12);
+    await startSession({ operations: ['addition'], difficulty: 1, sessionLength: 'continuous' });
+    await userEvent.click(screen.getByRole('button', { name: 'End Session' }));
+    await userEvent.keyboard('1');
+    await userEvent.click(screen.getByRole('button', { name: 'Keep Practicing' }));
+    const group = screen.getByRole('group', { name: 'Choose an answer' });
+    for (const button of within(group).getAllByRole('button')) {
+      expect(button).toHaveAttribute('aria-pressed', 'false');
+    }
+  });
+
+  it('can be played start to finish with only Tab, Space and Enter', async () => {
+    seedMathRandom(13);
+    const router = renderAt('/practice/setup', {
+      operations: ['subtraction'],
+      difficulty: 1,
+      sessionLength: 5,
+    });
+    const start = await screen.findByRole('button', { name: 'Start Session' });
+    await tabTo(start);
+    await userEvent.keyboard('{Enter}');
+    await screen.findByRole('region', { name: 'Question card' });
+
+    for (let question = 1; question <= 5; question++) {
+      const group = screen.getByRole('group', { name: 'Choose an answer' });
+      await tabTo(within(group).getAllByRole('button')[0]);
+      await userEvent.keyboard(' ');
+      await tabTo(screen.getByRole('button', { name: 'Flip Card' }));
+      await userEvent.keyboard(' ');
+      expect(screen.getByRole('heading', { name: / equals / })).toHaveFocus();
+      await userEvent.tab();
+      expect(screen.getByRole('button', { name: 'I Got It Right' })).toHaveFocus();
+      await userEvent.keyboard('{Enter}');
+    }
+
+    await screen.findByRole('heading', { level: 1, name: 'Session Summary' });
+    expect(router.state.location.pathname).toBe('/practice/summary');
   });
 
   it('resets the selection and flip state for the next question and focuses the new card', async () => {

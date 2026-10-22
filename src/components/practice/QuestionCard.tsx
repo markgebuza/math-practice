@@ -16,6 +16,7 @@ interface QuestionCardProps {
   totalQuestions?: number;
   showExplanations?: boolean;
   animationEnabled?: boolean;
+  onReveal?: (selectedAnswer: number) => void;
   onResult: (result: QuestionCardResult) => void;
 }
 
@@ -30,6 +31,7 @@ function QuestionCardContent({
   totalQuestions,
   showExplanations = true,
   animationEnabled = true,
+  onReveal,
   onResult,
 }: QuestionCardProps) {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -55,6 +57,7 @@ function QuestionCardContent({
   function handleFlip() {
     if (selectedAnswer !== null) {
       setIsCardFlipped(true);
+      onReveal?.(selectedAnswer);
     }
   }
 

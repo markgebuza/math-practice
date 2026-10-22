@@ -20,11 +20,11 @@
 }
 
 .nav__link:hover {
-  background: rgba(255, 255, 255, 0.18);
+  background: var(--color-primary-hover);
 }
 
 .nav__link:active {
-  background: rgba(255, 255, 255, 0.3);
+  background: #142f80;
 }
 
 .nav__link[aria-current='page'] {

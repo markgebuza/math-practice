@@ -37,7 +37,7 @@
   animation: practice-card-in 0.3s ease-out;
 }
 
-.practice-page__card:focus {
+.practice-page__card:focus:not(:focus-visible) {
   outline: none;
 }
 

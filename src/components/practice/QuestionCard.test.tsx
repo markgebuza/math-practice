@@ -286,3 +286,66 @@ describe('QuestionCard flipping', () => {
     expect(onResult).toHaveBeenLastCalledWith({ selectedAnswer: 48, selfReportedCorrect: true });
   });
 });
+
+describe('QuestionCard number keys', () => {
+  it('selects the matching answer with keys 1 to 4 and focuses it', async () => {
+    renderCard();
+    await userEvent.keyboard('3');
+    expect(choice(56)).toHaveAttribute('aria-pressed', 'true');
+    expect(choice(56)).toHaveFocus();
+    await userEvent.keyboard('1');
+    expect(choice(48)).toHaveAttribute('aria-pressed', 'true');
+    expect(choice(56)).toHaveAttribute('aria-pressed', 'false');
+    expect(choice(48)).toHaveAttribute('aria-keyshortcuts', '1');
+    expect(choice(64)).toHaveAttribute('aria-keyshortcuts', '4');
+  });
+
+  it('ignores other keys and keys pressed with a modifier', async () => {
+    renderCard();
+    await userEvent.keyboard('5');
+    await userEvent.keyboard('0');
+    await userEvent.keyboard('{Control>}2{/Control}');
+    await userEvent.keyboard('{Alt>}2{/Alt}');
+    await userEvent.keyboard('{Meta>}2{/Meta}');
+    await userEvent.keyboard('{Shift>}2{/Shift}');
+    for (const value of question.choices) {
+      expect(choice(value)).toHaveAttribute('aria-pressed', 'false');
+    }
+  });
+
+  it('does not change the answer after the card is flipped', async () => {
+    const { onResult } = renderCard();
+    await selectAndFlip(54);
+    await userEvent.keyboard('4');
+    await userEvent.click(screen.getByRole('button', { name: 'I Got It Right' }));
+    expect(onResult).toHaveBeenCalledExactlyOnceWith({
+      selectedAnswer: 54,
+      selfReportedCorrect: true,
+    });
+  });
+
+  it('does not interfere with typing in a text field', async () => {
+    render(
+      <>
+        <label>
+          Name
+          <input />
+        </label>
+        <QuestionCard question={question} questionNumber={1} onResult={vi.fn()} />
+      </>,
+    );
+    const input = screen.getByRole('textbox', { name: 'Name' });
+    await userEvent.type(input, '12');
+    expect(input).toHaveValue('12');
+    for (const value of question.choices) {
+      expect(choice(value)).toHaveAttribute('aria-pressed', 'false');
+    }
+  });
+
+  it('tells the page which answer was revealed', async () => {
+    const onReveal = vi.fn();
+    renderCard({ onReveal });
+    await selectAndFlip(64);
+    expect(onReveal).toHaveBeenCalledExactlyOnceWith(64);
+  });
+});

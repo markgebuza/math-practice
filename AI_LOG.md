@@ -534,3 +534,43 @@ and 1280px so nothing overflows.
 - "Most missed type of math" uses mistake-pattern `incorrectCount` sums (all patterns, including mastered), not per-operation statistics, so it survives Reset. A wrong fact-family review answer (e.g. 56 ÷ 8 from 8 × 7) counts toward the source pattern's operation (multiplication), as in Phase 14.
 - Most missed facts include mastered facts (marked "Mastered!"); ties are ordered by most recently missed, and facts tied at the 5th place beyond the limit are not shown.
 - The statistics page reads patterns once when it opens. The flaky test noted above was not identified.
+
+### [2026-10-21 23:02] Phase 16: Accessibility
+**My prompt:**
+Implement Phase 16 (tasks 66–69). Add number keys 1–4 for answers (not while typing in
+an input), visible focus indicators, and a live region that announces the revealed
+answer and progress. Make sure selected and right/wrong states use text or icons, not
+color alone.
+
+Add an automated accessibility check (e.g. axe) to the component tests and fix what it
+finds. Then give me a manual checklist for things only I can test: a full session using
+only the keyboard, a screen reader (VoiceOver or NVDA), 200% zoom, and reduced motion.
+Leave those TODO items unchecked until I confirm.
+
+**What you did:**
+- Run by a Claude Code subagent using the Phase 16 prompt from PROMPTS.md (not manually tested by me before commit).
+- Already there: `:focus-visible` outlines (purple on the page, yellow in the header), skip link, real inputs with a ✓ in setup/settings tiles, ✓ and `aria-pressed` on the selected answer, labelled answer buttons, ProgressBar ARIA values, ConfirmDialog focus trap, `usePrefersReducedMotion` + the card animation setting, focus moved to the card back heading on flip. Missing: number keys, a question/answer live region, an automated checker, and a focus ring on the new card.
+- Number keys (`src/components/practice/CardFront.tsx`, `AnswerChoice.tsx`): 1–4 select the matching answer and focus it while the card front is showing and not flipped. Ignored with Ctrl/Alt/Meta/Shift, when focus is in an input/textarea/select/contenteditable, and while a modal dialog (`aria-modal="true"`) is open. Answer buttons have `aria-keyshortcuts`.
+- One live region (`src/pages/PracticePage.tsx`, visually hidden `role="status"`): announces "Great job! Question 3 of 10: What is 7 times 8?" for each new question (including the first, added 100 ms after the page appears because a live region only announces changes) and "Correct answer: 56. Your answer: 54." when the card is flipped (new `onReveal` callback on `QuestionCard`). The visible "Great job! Here is question N." line is now plain text, so two regions never say the same thing. The focused card wrapper is now a group named "Question N" and shows the focus ring when reached by keyboard (`PracticePage.css`).
+- Contrast: recomputed every color added since Phase 2. The header nav hover (white on 18% white over blue, 4.42:1) and pressed (3.43:1) backgrounds were under 4.5:1; changed to `--color-primary-hover` (9.04:1) and `#142f80` (12.01:1) in `Navigation.css`. All others pass: text on the selected tint `#eaf0ff` 13.02, muted text on the tint 6.78, text on the notice `#fff1c7` 13.20, white on purple 7.11, focus ring on page/white/tint 6.71/7.11/6.23, header focus ring on blue 4.16 (UI, needs 3), selected border on white 6.40.
+- Automated check: `axe-core` 4.14.0 (MPL-2.0, compatible; released 2026-10-05) added with `npm install --save-exact -D`. Helper `src/test/axe.ts` disables the `color-contrast` rule because jsdom cannot compute colors (contrast was computed instead). New `src/app/Accessibility.test.tsx` runs axe on every route (home, setup, session redirect, summary, statistics, settings, 404) and these states: setup in review mode, card front with a key-picked answer, flipped card animated and with animation off, end-session dialog, summary after a session, statistics with data + mastered list open + reset dialog, settings with the clear-data dialog; plus a test that the helper really reports a missing button name. axe found no violations in the app, so nothing needed fixing there.
+- Tests: 15 axe tests, 5 number-key tests in `QuestionCard.test.tsx`, 3 in `PracticePage.test.tsx` (live region content, keys ignored while the dialog is open, a full 5-question session using only Tab/Space/Enter); 2 existing status assertions updated to the new wording. Commands: `npx prettier --write .`, `npm run lint`, `npm test -- --run` (twice), `npm run build`, `vite preview` + a headless Chrome screenshot with a temporary page in `dist/` (deleted).
+
+**Verification:**
+- `npm run lint`: pass, 0 errors, 0 warnings.
+- `npm test -- --run`: 34 files, 410/410 passed (387 before, 23 new), on two full runs. The first version of the helper self-test failed because it expected exactly one violation and axe also reported a missing document title in that bare render; changed it to "contains button-name". axe makes jsdom print "HTMLCanvasElement getContext() not implemented"; harmless.
+- `npm run build`: pass (JS 370.83 kB, 114.15 kB gzip).
+- Screenshot: setup → Start Session → key "2" selected the second answer (✓ shown); Settings shows the purple focus ring around the focused Sound effects tile. Only one iframe can hold focus, so the answer button's own ring was not captured.
+- TODO: checked 66 (focus indicators, Enter/Space, number keys, text inputs), all of 67, 68 detect/disable, 69 contrast/color alone/selected states, plus task 20 "Add hover and focus states", task 30 "Make progress accessible to screen readers" and task 82 "Run an automated accessibility checker". Left unchecked: 66 "every control reachable with Tab" (only the practice flow is automated), 68 "Keep state changes visually clear", 69 200% zoom and larger fonts, and task 82's manual items.
+- Manual checklist for you:
+  1. Keyboard only (`npm run dev`, no mouse): Tab to Start Practice → on setup choose with Tab/arrows/Space → Start Session; on each card press 1–4 (the answer gets a ✓ and a purple ring), Tab to Flip Card, Enter; on the back Tab to I Got It Right/Wrong, Enter; finish and use the summary buttons. Check you can always see where focus is and that nothing on Statistics and Settings is unreachable (including "Mastered facts" and both dialogs; Escape closes them).
+  2. In a continuous session open End Session and press 1–4: nothing changes behind the dialog.
+  3. Screen reader (NVDA + Chrome/Firefox, or VoiceOver + Safari): starting a session reads "Question 1 of N: What is …?"; flipping reads the back heading and "Correct answer: X. Your answer: Y."; after I Got It Right it reads "Great job! Question 2 of N: …". Check each thing is read once, not twice, and that answer buttons say e.g. "Answer 9, toggle button, pressed".
+  4. 200% browser zoom (Ctrl/Cmd +) and a larger system/browser font size: every page still fits without sideways scrolling and text doesn't overlap.
+  5. Reduced motion (Windows: Settings → Accessibility → Visual effects → Animation effects off; macOS: Reduce motion): the card switches to the back instantly, it's still obvious which side you're on, and the selected answer is still clear.
+
+**Problems / open issues:**
+- Not covered by DECISIONS (chose the conservative option): the card back still shows only "Correct answer" and "Your answer" as text with no right/wrong verdict or color (DECISIONS 3.2: the child self-reports); number keys also move focus to the chosen answer so screen readers hear what was picked; no visible "press 1–4" hint was added (the existing hint is unchanged; `aria-keyshortcuts` exposes the keys to assistive tech).
+- The focused card wrapper ("Question N" group) and the live region both mention "Question N"; whether a screen reader says that once or twice needs your check (item 3). The 100 ms delay before the first announcement is a heuristic.
+- jsdom can't compute color contrast, so axe's `color-contrast` rule is off; contrast was computed by script. Card and tile borders (`#e6dcc3` on white) are decorative (each control is identified by its text), so they were not held to 3:1.
+- Not tested by hand in a real browser (only headless screenshots).

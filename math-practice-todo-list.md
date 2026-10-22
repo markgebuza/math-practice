@@ -190,7 +190,7 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 
 -   [x] Display each choice as a button.
 -   [x] Support selected and unselected states.
--   [ ] Add hover and focus states.
+-   [x] Add hover and focus states.
 -   [x] Use large touch targets.
 -   [x] Add accessible labels.
 -   [x] Prevent changes after the card is flipped.
@@ -278,7 +278,7 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 -   [x] Add a progress bar.
 -   [x] Update progress after each attempt.
 -   [x] Handle continuous practice without a fixed total.
--   [ ] Make progress accessible to screen readers.
+-   [x] Make progress accessible to screen readers.
 
 ### 31. Support Continuous Practice
 
@@ -558,32 +558,32 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 ### 66. Improve Keyboard Navigation
 
 -   [ ] Ensure every control is reachable with Tab.
--   [ ] Add visible focus indicators.
--   [ ] Support Enter and Space on buttons.
--   [ ] Support number keys 1--4 for answers.
--   [ ] Avoid interfering with text inputs.
+-   [x] Add visible focus indicators.
+-   [x] Support Enter and Space on buttons.
+-   [x] Support number keys 1--4 for answers.
+-   [x] Avoid interfering with text inputs.
 
 ### 67. Improve Screen-Reader Support
 
--   [ ] Use semantic HTML.
--   [ ] Label answer choices.
--   [ ] Announce question changes.
--   [ ] Announce the revealed answer.
--   [ ] Announce session progress.
--   [ ] Give icon buttons accessible names.
+-   [x] Use semantic HTML.
+-   [x] Label answer choices.
+-   [x] Announce question changes.
+-   [x] Announce the revealed answer.
+-   [x] Announce session progress.
+-   [x] Give icon buttons accessible names.
 
 ### 68. Support Reduced Motion
 
--   [ ] Detect `prefers-reduced-motion`.
--   [ ] Disable flip animation when requested.
+-   [x] Detect `prefers-reduced-motion`.
+-   [x] Disable flip animation when requested.
 -   [ ] Keep state changes visually clear.
 -   [x] Respect the app animation setting.
 
 ### 69. Check Visual Accessibility
 
--   [ ] Verify color contrast.
--   [ ] Do not communicate results by color alone.
--   [ ] Add text or icons to selected states.
+-   [x] Verify color contrast.
+-   [x] Do not communicate results by color alone.
+-   [x] Add text or icons to selected states.
 -   [ ] Test at 200% browser zoom.
 -   [ ] Test larger system font sizes.
 
@@ -698,7 +698,7 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 -   [ ] Test with a screen reader.
 -   [ ] Test reduced-motion mode.
 -   [ ] Test browser zoom.
--   [ ] Run an automated accessibility checker.
+-   [x] Run an automated accessibility checker.
 -   [ ] Manually review findings.
 
 ## Phase 21: Performance and Data Management
