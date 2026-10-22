@@ -1,0 +1,13 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# React Router 8 needs Node 22.22 or newer (see "engines" in package.json).
+[build.environment]
+  NODE_VERSION = "24"
+
+# Single-page app: let React Router handle every path, so refreshing /statistics works.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

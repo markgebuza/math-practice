@@ -370,6 +370,19 @@ describe('storageService', () => {
       expect(localStorage.getItem(STORAGE_KEYS.activeSession)).toBeNull();
       expect(localStorage.getItem('otherApp.data')).toBe('keep me');
     });
+
+    it('leaves no mathPractice key behind', () => {
+      initializeStorage();
+      storeAll();
+      saveActiveSession(makeActiveSession());
+      expect(Object.keys(localStorage).filter((key) => key.startsWith('mathPractice.'))).toEqual(
+        expect.arrayContaining(Object.values(STORAGE_KEYS)),
+      );
+      expect(clearAllData()).toBe(true);
+      expect(Object.keys(localStorage).filter((key) => key.startsWith('mathPractice.'))).toEqual(
+        [],
+      );
+    });
   });
 
   describe('attempts and sessions', () => {

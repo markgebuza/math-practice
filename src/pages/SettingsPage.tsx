@@ -215,6 +215,17 @@ export function SettingsPage() {
           </select>
         </section>
 
+        <section className="settings__group" aria-labelledby="settings-grown-ups">
+          <h2 id="settings-grown-ups" className="settings__heading">
+            For grown-ups
+          </h2>
+          <p className="settings__hint">
+            Progress is saved only in this browser on this device, and nothing is sent anywhere.
+            Clearing this browser&rsquo;s history or site data will also erase it, so check before
+            you clear.
+          </p>
+        </section>
+
         <section
           className="settings__group settings__danger"
           aria-labelledby="settings-clear-heading"

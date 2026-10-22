@@ -799,3 +799,40 @@ bundle size before and after.
 - The font trim mainly shrinks the build output: browsers already downloaded only the subsets a page uses (unicode-range), so the real download for English text was already just the Latin file.
 - jsdom render time is not a browser measurement; slower-device testing needs you.
 - The global 5 s async timeout makes a genuinely failing `findBy*` take longer to report.
+
+### [2026-10-22 10:48] Phase 22: Release Preparation
+**My prompt:**
+Implement Phase 22 tasks 86 and 88.
+- Privacy: confirm no tracking, external requests, or ads; add a short note in Settings
+  that clearing browser data erases progress.
+- Build: fix all lint and TypeScript errors, run all tests, build, and run `npm run preview`.
+- Routing: add netlify.toml (build command `npm run build`, publish directory `dist`) and
+  an SPA fallback so /statistics etc. work on refresh.
+- Write README.md: description, features, tech stack, Node version, install, run, test,
+  build, deploy steps, and project structure.
+Confirm with `git status` and `git ls-files` that no secrets or .env files are tracked.
+
+**What you did:**
+- Run by a Claude Code subagent using the Phase 22 prompt from PROMPTS.md (not manually tested by me before commit).
+- Tasks before starting: 86 mostly existed already (no tracking/ads/network code, data only in `localStorage`) but there was no note about clearing browser data, and Clear All Data left `mathPractice.version` behind; 88 needed `netlify.toml` and a README (none was tracked, checked with `git ls-files`); lint/types/tests/build already passed.
+- Privacy audit: grepped `src/`, `index.html`, `public/` and `vite.config.ts` for `fetch`, `XMLHttpRequest`, `WebSocket`, `sendBeacon`, `EventSource`, `http(s)://`, `<a`/`href`, analytics, cookies, `sessionStorage`/IndexedDB. Found only the skip link (`#main-content`), the local favicon, the two `import()` calls for lazy pages, and the Nunito font bundled from `@fontsource-variable/nunito`. Sounds are made with Web Audio (no files). The only inputs are checkboxes, radios and one select: no names or free text. In the built `dist/`, the `http` strings are XML namespaces (w3.org), `http://localhost` used internally by React Router to parse URLs, and two developer error links (react.dev, reactrouter.com) inside error messages; the one `fetch(` is Vite's modulepreload helper for the app's own same-origin files.
+- Settings (`src/pages/SettingsPage.tsx`): new "For grown-ups" section above "Start over": "Progress is saved only in this browser on this device, and nothing is sent anywhere. Clearing this browser's history or site data will also erase it, so check before you clear." `clearAllData` (`src/services/storageService.ts`) now removes every key in `STORAGE_KEYS`, which adds `mathPractice.version` (it already removed `archivedStatistics` and `activeSession`); the unused `DATA_KEYS` list was deleted. Tests: privacy-note test in `SettingsPage.test.tsx`; the Clear All test now also seeds `archivedStatistics` and checks no `mathPractice.*` key is left; new storage test "leaves no mathPractice key behind".
+- `netlify.toml`: build command `npm run build`, publish `dist`, `[build.environment] NODE_VERSION = "24"` (React Router 8 needs Node >= 22.22, `engines` in package.json), and the SPA fallback redirect `/*` → `/index.html` (200). No `public/_redirects` (it would duplicate the toml).
+- `README.md`: description, features, tech stack with versions from package.json, Node version, install/run, scripts (test, coverage, lint, format, build, preview), Netlify deploy steps (base directory blank, build command, publish dir, Node 24), project structure matching the real `src/` tree, data/privacy note with all `mathPractice.*` keys, and links to the spec, TODO, DECISIONS.md and AI_LOG.md.
+- Commands: `npx prettier --write .`, `npm run lint`, `npm test -- --run`, `npm run build`, `npm run preview -- --port 4179 --strictPort` + `curl` on every route, headless-Chrome screenshots, `git status --short --ignored`, `git ls-files`.
+
+**Verification:**
+- `npm run lint`: first run failed with 1 error (`DATA_KEYS` unused after the `clearAllData` change; `tsc -b` in the build reported the same); fixed by deleting the constant. Final: pass, 0 errors, 0 warnings.
+- `npm test -- --run`: 41 files, 514/514 passed (512 before; +2 new tests, the Clear All test was extended).
+- `npm run build` (`tsc -b && vite build`): pass, 0 TypeScript errors. Main JS 369.17 kB (115.18 kB gzip), StatisticsPage 8.78 kB, SettingsPage 5.71 kB, CSS 15.13 kB, font 39.12 kB.
+- `npm run preview`: `/`, `/practice/setup`, `/practice/session`, `/practice/summary`, `/statistics`, `/settings` and `/no/such/page` all returned 200 `text/html` with the app's `<div id="root">`. Screenshots from the preview (iframes at 375, 768 and 1280 px): Settings shows the "For grown-ups" note above "Start over" at both widths without overflow; Statistics (empty state), the Not Found page for an unknown URL and Practice Setup render correctly. Server stopped afterwards.
+- Secrets: `git ls-files` has no `.env`, key, token or `.pem` files; `git status --short --ignored` shows only the Phase 22 changes plus ignored `coverage/`, `dist/`, `node_modules/`. `.gitignore` covers `.env` and `.env.*`.
+- TODO: checked all of task 86 and all of task 88. Tasks 87 and 89 left unchecked.
+- Manual checklist for you: (1) open Settings and read the "For grown-ups" note; is the wording right for parents? (2) practice a few questions, then Settings → Clear All Application Data → DevTools > Application > Local Storage: no `mathPractice.*` keys left. (3) `npm run build && npm run preview`, open `/statistics` directly and refresh. (4) DevTools > Network while using the app: only files from your own site. (5) Task 87: Chrome, Safari, Firefox, Edge, a tablet and a phone (record with `> ME:` notes). (6) Push to GitHub and deploy on Netlify (task 89); check that the deploy log shows Node 24.
+
+**Problems / open issues:**
+- Left for you: task 87 (manual browser/device testing), the push to GitHub, and task 89 (Netlify deploy and post-deploy checks). No remote was added and nothing was pushed or deployed.
+- Not covered by DECISIONS (chose conservatively): Clear All Data now also removes `mathPractice.version`; it is written again the next time the app starts, so nothing breaks.
+- Node version for Netlify is set only in `netlify.toml` (no `.nvmrc`), so local Node is not pinned; `engines` in package.json still says `>=22.22`.
+- `public/favicon.svg` is still the default Vite logo (not a privacy issue, just not app branding).
+- "Test the production build locally" was checked from curl on every route plus screenshots of 4 pages, not a full click-through in a real browser.

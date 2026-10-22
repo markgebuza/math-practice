@@ -730,11 +730,11 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 
 ### 86. Complete Privacy Review
 
--   [ ] Confirm no personal information is collected.
--   [ ] Confirm practice data stays in the browser.
--   [ ] Remove unnecessary tracking.
--   [ ] Avoid child-facing advertisements.
--   [ ] Explain that clearing browser data removes progress.
+-   [x] Confirm no personal information is collected.
+-   [x] Confirm practice data stays in the browser.
+-   [x] Remove unnecessary tracking.
+-   [x] Avoid child-facing advertisements.
+-   [x] Explain that clearing browser data removes progress.
 
 ### 87. Complete Browser Testing
 
@@ -747,12 +747,12 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 
 ### 88. Prepare the Production Build
 
--   [ ] Run all tests.
--   [ ] Resolve lint errors.
--   [ ] Resolve TypeScript errors.
--   [ ] Create the production build.
--   [ ] Test the production build locally.
--   [ ] Configure deployment routing for React Router.
+-   [x] Run all tests.
+-   [x] Resolve lint errors.
+-   [x] Resolve TypeScript errors.
+-   [x] Create the production build.
+-   [x] Test the production build locally.
+-   [x] Configure deployment routing for React Router.
 
 ### 89. Deploy the Application
 

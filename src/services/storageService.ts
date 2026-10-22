@@ -37,15 +37,6 @@ export const STORAGE_KEYS: Record<DataKey | 'version' | 'activeSession', string>
   activeSession: 'mathPractice.activeSession',
 };
 
-const DATA_KEYS: DataKey[] = [
-  'settings',
-  'sessions',
-  'attempts',
-  'mistakePatterns',
-  'statistics',
-  'archivedStatistics',
-];
-
 export const SCHEMA_VERSION = 1;
 
 // DECISIONS 3.4
@@ -275,7 +266,7 @@ export function clearData(keys: DataKey[]): boolean {
 
 // Removes only this app's keys, never anything else stored for the site.
 export function clearAllData(): boolean {
-  return removeKeys([...DATA_KEYS.map((key) => STORAGE_KEYS[key]), STORAGE_KEYS.activeSession]);
+  return removeKeys(Object.values(STORAGE_KEYS));
 }
 
 function isQuestion(value: unknown): value is Question {

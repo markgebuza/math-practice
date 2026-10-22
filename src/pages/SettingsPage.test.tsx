@@ -259,6 +259,18 @@ describe('settings during practice', () => {
   });
 });
 
+describe('privacy note', () => {
+  it('tells grown-ups that progress stays on this device and is erased with browser data', async () => {
+    renderAt('/settings');
+    const section = await screen.findByRole('region', { name: 'For grown-ups' });
+    expect(section).toHaveTextContent(/saved only in this browser on this device/);
+    expect(section).toHaveTextContent(/nothing is sent anywhere/);
+    expect(section).toHaveTextContent(
+      /Clearing this browser.s history or site data will also erase it/,
+    );
+  });
+});
+
 describe('Clear All Application Data', () => {
   function seedEverything() {
     saveStoredSettings({ soundEffects: true, defaultDifficulty: 4, masteryThreshold: 9 });
@@ -266,6 +278,7 @@ describe('Clear All Application Data', () => {
     localStorage.setItem(STORAGE_KEYS.attempts, '[]');
     localStorage.setItem(STORAGE_KEYS.mistakePatterns, '[]');
     localStorage.setItem(STORAGE_KEYS.statistics, '{}');
+    localStorage.setItem(STORAGE_KEYS.archivedStatistics, '{}');
     localStorage.setItem('someOtherSite.key', 'keep me');
   }
 
@@ -303,16 +316,7 @@ describe('Clear All Application Data', () => {
     await screen.findByRole('heading', { level: 1, name: 'Math Practice' });
     expect(router.state.location.pathname).toBe('/');
     expect(screen.getByRole('status')).toHaveTextContent('All app data was cleared.');
-    for (const key of [
-      'settings',
-      'sessions',
-      'attempts',
-      'mistakePatterns',
-      'statistics',
-      'activeSession',
-    ] as const) {
-      expect(localStorage.getItem(STORAGE_KEYS[key])).toBeNull();
-    }
+    expect(Object.keys(localStorage).filter((key) => key.startsWith('mathPractice.'))).toEqual([]);
     expect(localStorage.getItem('someOtherSite.key')).toBe('keep me');
 
     await goTo(router, '/settings', 'Settings');
