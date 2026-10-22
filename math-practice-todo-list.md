@@ -353,56 +353,56 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 
 ### 40. Implement Statistics Calculations
 
--   [ ] Calculate attempted, correct, and incorrect totals.
--   [ ] Calculate overall accuracy.
--   [ ] Handle zero attempts safely.
--   [ ] Add unit tests.
+-   [x] Calculate attempted, correct, and incorrect totals.
+-   [x] Calculate overall accuracy.
+-   [x] Handle zero attempts safely.
+-   [x] Add unit tests.
 
 ### 41. Track Statistics by Operation
 
--   [ ] Track addition.
--   [ ] Track subtraction.
--   [ ] Track multiplication.
--   [ ] Track division.
--   [ ] Calculate accuracy for each.
+-   [x] Track addition.
+-   [x] Track subtraction.
+-   [x] Track multiplication.
+-   [x] Track division.
+-   [x] Calculate accuracy for each.
 
 ### 42. Track Statistics by Difficulty
 
--   [ ] Track Level 1 through Level 4.
--   [ ] Calculate attempted, correct, incorrect, and accuracy for each
+-   [x] Track Level 1 through Level 4.
+-   [x] Calculate attempted, correct, incorrect, and accuracy for each
     level.
 
 ### 43. Create the Statistics Overview
 
--   [ ] Display total attempted, correct, incorrect, and accuracy.
--   [ ] Add an empty state for new users.
+-   [x] Display total attempted, correct, incorrect, and accuracy.
+-   [x] Add an empty state for new users.
 
 ### 44. Display Statistics by Operation
 
--   [ ] Create a card for each operation.
--   [ ] Show attempted, correct, incorrect, and accuracy.
--   [ ] Make the layout responsive.
+-   [x] Create a card for each operation.
+-   [x] Show attempted, correct, incorrect, and accuracy.
+-   [x] Make the layout responsive.
 
 ### 45. Display Statistics by Difficulty
 
--   [ ] Create a card for each level.
--   [ ] Show attempted, correct, incorrect, and accuracy.
+-   [x] Create a card for each level.
+-   [x] Show attempted, correct, incorrect, and accuracy.
 
 ### 46. Display Recent Sessions
 
--   [ ] Show date, operations, difficulty, and totals.
--   [ ] Show session accuracy.
--   [ ] Sort newest to oldest.
--   [ ] Add an empty state.
+-   [x] Show date, operations, difficulty, and totals.
+-   [x] Show session accuracy.
+-   [x] Sort newest to oldest.
+-   [x] Add an empty state.
 
 ### 47. Add Statistics Reset
 
--   [ ] Add **Reset Statistics**.
--   [ ] Create a confirmation dialog.
--   [ ] Require explicit confirmation.
--   [ ] Clear attempts, sessions, and aggregate statistics.
--   [ ] Decide whether settings remain unchanged.
--   [ ] Refresh the displayed statistics.
+-   [x] Add **Reset Statistics**.
+-   [x] Create a confirmation dialog.
+-   [x] Require explicit confirmation.
+-   [x] Clear attempts, sessions, and aggregate statistics.
+-   [x] Decide whether settings remain unchanged.
+-   [x] Refresh the displayed statistics.
 
 ## Phase 11: Settings
 
@@ -668,7 +668,7 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 -   [ ] Test difficulty boundaries.
 -   [ ] Test distractors and choice uniqueness.
 -   [ ] Test similar-question generation.
--   [ ] Test statistics calculations.
+-   [x] Test statistics calculations.
 -   [ ] Test mastery rules.
 -   [ ] Test storage serialization and validation.
 
@@ -678,7 +678,7 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 -   [ ] Test answer selection and card flipping.
 -   [ ] Test right/wrong buttons.
 -   [ ] Test progress and session completion.
--   [ ] Test statistics display.
+-   [x] Test statistics display.
 -   [ ] Test confirmation dialogs.
 
 ### 81. Complete Integration Tests
@@ -690,7 +690,7 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 -   [ ] Test mistake-review generation.
 -   [ ] Test mastery completion.
 -   [ ] Test persistence after refresh.
--   [ ] Test resetting statistics.
+-   [x] Test resetting statistics.
 
 ### 82. Complete Accessibility Testing
 

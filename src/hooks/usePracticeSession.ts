@@ -4,7 +4,8 @@ import { PracticeSessionContext, practiceSessionReducer } from '../app/practiceS
 import { useStorage } from '../app/storageContext';
 import type { QuestionCardResult } from '../components/practice/QuestionCard';
 import { generateNextQuestion } from '../services/questionGenerator';
-import { saveAttempt, saveSession } from '../services/storageService';
+import { recordAttempt } from '../services/statisticsService';
+import { saveSession } from '../services/storageService';
 import type { PracticeAttempt } from '../types';
 import { createId } from '../utils/ids';
 
@@ -69,7 +70,7 @@ export function usePracticeSession() {
     }
     dispatch(action);
     // Saved right away, so an answer is kept even if the session is never finished.
-    reportSave(saveAttempt(attempt) && saveSession(next.currentSession));
+    reportSave(recordAttempt(attempt) && saveSession(next.currentSession));
   }
 
   function endSession() {
