@@ -1,0 +1,14 @@
+.storage-warning {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 var(--page-gutter);
+}
+
+.storage-warning__message {
+  margin: var(--space-3) 0 0;
+  padding: var(--space-2) var(--space-3);
+  border: 3px solid var(--color-secondary-hover);
+  border-radius: var(--radius-md);
+  background: #fff1c7;
+  font-weight: 700;
+}

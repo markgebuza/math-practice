@@ -315,37 +315,37 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 
 ### 35. Create the Storage Service
 
--   [ ] Wrap `localStorage` access.
--   [ ] Add read and write functions.
--   [ ] Handle JSON parsing errors.
--   [ ] Validate loaded data.
--   [ ] Handle unavailable or full storage.
+-   [x] Wrap `localStorage` access.
+-   [x] Add read and write functions.
+-   [x] Handle JSON parsing errors.
+-   [x] Validate loaded data.
+-   [x] Handle unavailable or full storage.
 
 ### 36. Add Data Schema Versioning
 
--   [ ] Store a schema version.
+-   [x] Store a schema version.
 -   [ ] Detect missing or older versions.
--   [ ] Create an initial migration structure.
--   [ ] Avoid deleting unrelated stored data.
+-   [x] Create an initial migration structure.
+-   [x] Avoid deleting unrelated stored data.
 
 ### 37. Persist Settings
 
--   [ ] Save settings.
--   [ ] Load settings at startup.
--   [ ] Use defaults when settings are missing.
--   [ ] Recover from invalid stored settings.
+-   [x] Save settings.
+-   [x] Load settings at startup.
+-   [x] Use defaults when settings are missing.
+-   [x] Recover from invalid stored settings.
 
 ### 38. Persist Practice Sessions
 
--   [ ] Save session information.
--   [ ] Save completion details.
--   [ ] Load recent sessions.
+-   [x] Save session information.
+-   [x] Save completion details.
+-   [x] Load recent sessions.
 -   [ ] Limit or summarize old records if needed.
 
 ### 39. Persist Practice Attempts
 
--   [ ] Save each completed attempt.
--   [ ] Include selected answer, result, operation, difficulty, session
+-   [x] Save each completed attempt.
+-   [x] Include selected answer, result, operation, difficulty, session
     ID, and timestamp.
 -   [ ] Confirm data survives a browser restart.
 
