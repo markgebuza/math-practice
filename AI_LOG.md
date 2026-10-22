@@ -506,3 +506,31 @@ Explain the data flow from the wrong-answer click to the enabled button.
 - A review session's stored `PracticeSession` has no mode field (the spec's data model has none): `operations` are the reviewed patterns' operations and `difficulty` is the highest pattern level, so Recent Sessions shows it like a regular session. Fact-family questions (e.g. 56 ÷ 8 from 8 × 7) are not listed in the session's operations, but each attempt is counted under its real operation in statistics.
 - The setup page reads the active pattern count once when it opens. Not tested by hand in a real browser (only headless screenshots).
 - Phase 15 should show active/mastered patterns and "similar questions practiced" (attempts with source `mistake-review`).
+
+### [2026-10-21 22:51] Phase 15: Advanced Statistics
+**My prompt:**
+Implement Phase 15 (tasks 63–65) on the statistics page. Handle ties in "most frequently
+missed" sensibly and add empty states. Recheck the statistics layout at 375px, 768px,
+and 1280px so nothing overflows.
+
+**What you did:**
+- Run by a Claude Code subagent using the Phase 15 prompt from PROMPTS.md (not manually tested by me before commit).
+- Already there: pattern loading with the Settings mastery threshold (`loadMistakePatterns`), `activePatterns`, review attempts saved with source `mistake-review`, the statistics page with overview/operation/level/recent-session sections. Missing: everything in tasks 63–65.
+- New `src/components/statistics/MistakeStatistics.tsx` ("Mistake practice" section on the statistics page, between "By level" and "Recent sessions"; always shown because patterns survive Reset): counts for Facts to practice, Facts mastered, Similar questions practiced, Review questions answered correctly; "Most missed type of math"; "Most missed facts" (top 5); "Facts to practice" cards with times missed, progress as text ("1 of 3 similar questions right in a row", plus a decorative progress bar hidden from screen readers) and last missed date; a collapsible "Mastered facts (N)" `<details>` section. Facts read as "8 times 7 equals 56" for screen readers. Empty states: no patterns at all, every fact mastered, nothing mastered yet.
+- `src/services/mistakeService.ts`: `sortByIncorrectCount` (incorrect count desc, then most recently missed), `mostMissedFacts(patterns, 5)`, `mostMissedOperations` (sums `incorrectCount` per operation over all patterns, active and mastered; returns every operation tied for the most, shown as e.g. "Multiplication and Division (missed 3 times each)").
+- Review counts: new optional `mistakeReview?: OperationStatistics` on `AppStatistics` (`src/types/statistics.ts`), updated by `addAttemptToStatistics` for `mistake-review` attempts; `createEmptyStatistics` includes it; `storageService` validates it when present; `loadStatistics` fills it from saved review attempts for totals stored before it existed. `src/hooks/useStatistics.ts` also loads patterns with `settings.masteryThreshold`.
+- Tests: 5 in `mistakeService.test.ts`, 2 in `statisticsService.test.ts`, 1 in `storageService.test.ts`, 9 new + 1 extended in `StatisticsPage.test.tsx`. Commands: `npx prettier --write .`, `npm run lint`, `npm test -- --run` (several runs), `npm run build`; screenshots via `vite preview` with a temporary seeding page in `dist/` (deleted afterwards).
+
+**Verification:**
+- `npm run lint`: pass, 0 errors, 0 warnings.
+- `npm test -- --run`: 33 files, 387/387 passed (370 before, 17 new). First service run: 1 failure from a mistake in my test data (division and multiplication accidentally tied at 6); fixed the test data, not the code. One of five full runs (the second, after the final CSS change) had 1 failed test (I did not capture which one; most likely a timing-sensitive long UI test under load, as in Phase 14); the next three full runs all passed 387/387.
+- `npm run build`: pass (JS 369.70 kB, 113.74 kB gzip).
+- Layout: seeded 30 attempts, a session and 7 patterns (including 984 ÷ 24 and 1000 − 999), opened the mastered section, and measured each iframe: at 375, 768 and 1280 px the document scroll width equals the viewport width and no element extends past the right edge. Screenshots: 1 column of cards at 375 px, 2 at 768 and 1280; labels and values don't overlap; recent sessions readable.
+- TODO: all Phase 15 items checked; also task 72 "Optimize Statistics Layout" (all 4 items) based on these width checks and screenshots (the page uses cards, not tables, at every width).
+- Manual checklist for you: (1) `npm run dev`, open Statistics with no data: "Mistake practice" shows zeros and "No mistakes to practice right now…". (2) Play a session and mark 2–3 cards I Got It Wrong: they appear under Facts to practice with "Missed 1 time", "0 of 3 …" and today's date. (3) Practice Mistakes and answer review cards right: Similar questions practiced / Review questions answered correctly go up; after 3 in a row the fact moves to "Mastered facts". (4) Open/close "Mastered facts" with the keyboard (Tab, Enter). (5) Miss one multiplication and one division fact the same number of times: "Multiplication and Division" appears. (6) Reset Statistics: the review counts go to 0, the facts stay. (7) Check the page on a phone and with a screen reader.
+
+**Problems / open issues:**
+- Not covered by DECISIONS (chose the conservative option): "Similar questions practiced" and "Review questions answered correctly" come from the new optional aggregate field `mistakeReview` rather than from attempts, so they survive Phase 21's attempt trimming; Reset Statistics clears them with the other statistics (DECISIONS 3.1), while patterns stay. The spec's `AppStatistics` fields are unchanged.
+- "Most missed type of math" uses mistake-pattern `incorrectCount` sums (all patterns, including mastered), not per-operation statistics, so it survives Reset. A wrong fact-family review answer (e.g. 56 ÷ 8 from 8 × 7) counts toward the source pattern's operation (multiplication), as in Phase 14.
+- Most missed facts include mastered facts (marked "Mastered!"); ties are ordered by most recently missed, and facts tied at the 5th place beyond the limit are not shown.
+- The statistics page reads patterns once when it opens. The flaky test noted above was not identified.

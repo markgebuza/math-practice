@@ -1,5 +1,6 @@
-import type { MistakePattern, PracticeAttempt } from '../types';
+import type { MathOperation, MistakePattern, PracticeAttempt } from '../types';
 import { createId } from '../utils/ids';
+import { OPERATIONS } from '../utils/labels';
 import { isSameQuestion } from './questionGenerator';
 import { readData, writeData } from './storageService';
 
@@ -65,6 +66,33 @@ export function rankPatterns(
     .map((pattern) => ({ pattern, score: reviewPriority(pattern, now), tieBreak: random() }))
     .sort((a, b) => b.score - a.score || a.tieBreak - b.tieBreak)
     .map(({ pattern }) => pattern);
+}
+
+// Most missed first; equal counts put the most recently missed first.
+export function sortByIncorrectCount(patterns: MistakePattern[]): MistakePattern[] {
+  return [...patterns].sort(
+    (a, b) =>
+      b.incorrectCount - a.incorrectCount ||
+      Date.parse(b.lastIncorrectAt) - Date.parse(a.lastIncorrectAt),
+  );
+}
+
+export function mostMissedFacts(patterns: MistakePattern[], limit = 5): MistakePattern[] {
+  return sortByIncorrectCount(patterns).slice(0, limit);
+}
+
+// Sums incorrectCount per operation; every operation tied for the most is returned, in the usual
+// operation order.
+export function mostMissedOperations(patterns: MistakePattern[]) {
+  const totals = new Map<MathOperation, number>();
+  for (const pattern of patterns) {
+    totals.set(pattern.operation, (totals.get(pattern.operation) ?? 0) + pattern.incorrectCount);
+  }
+  const most = Math.max(0, ...totals.values());
+  return {
+    operations: most === 0 ? [] : OPERATIONS.filter((operation) => totals.get(operation) === most),
+    incorrectCount: most,
+  };
 }
 
 // DECISIONS 2.4: patterns repeat in priority order; mastered ones are skipped.

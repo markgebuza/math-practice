@@ -184,6 +184,22 @@ describe('storageService', () => {
     expect(readData('statistics')).toEqual({ value: createEmptyStatistics(), status: 'reset' });
   });
 
+  it('accepts totals without review counts but resets invalid review counts', () => {
+    const withoutReview: Partial<AppStatistics> = createEmptyStatistics();
+    delete withoutReview.mistakeReview;
+    localStorage.setItem(STORAGE_KEYS.statistics, JSON.stringify(withoutReview));
+    expect(readData('statistics')).toEqual({ value: withoutReview, status: 'ok' });
+
+    localStorage.setItem(
+      STORAGE_KEYS.statistics,
+      JSON.stringify({
+        ...createEmptyStatistics(),
+        mistakeReview: { attempted: 2, correct: 2, incorrect: 1 },
+      }),
+    );
+    expect(readData('statistics')).toEqual({ value: createEmptyStatistics(), status: 'reset' });
+  });
+
   it('recovers invalid settings field by field', () => {
     localStorage.setItem(
       STORAGE_KEYS.settings,

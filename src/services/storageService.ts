@@ -130,7 +130,8 @@ function isStatistics(value: unknown): value is AppStatistics {
     isRecord(value.byOperation) &&
     isRecord(value.byDifficulty) &&
     OPERATIONS.every((op) => isCounts((value.byOperation as Fields)[op])) &&
-    DIFFICULTY_LEVELS.every((level) => isCounts((value.byDifficulty as Fields)[level]))
+    DIFFICULTY_LEVELS.every((level) => isCounts((value.byDifficulty as Fields)[level])) &&
+    (value.mistakeReview === undefined || isCounts(value.mistakeReview))
   );
 }
 

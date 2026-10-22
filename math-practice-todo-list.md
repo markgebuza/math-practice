@@ -532,26 +532,26 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 
 ### 63. Add Mistake Statistics
 
--   [ ] Display active patterns.
--   [ ] Display mastered patterns.
--   [ ] Display similar questions practiced.
--   [ ] Display review questions answered correctly.
+-   [x] Display active patterns.
+-   [x] Display mastered patterns.
+-   [x] Display similar questions practiced.
+-   [x] Display review questions answered correctly.
 
 ### 64. Identify Frequently Missed Areas
 
--   [ ] Identify the most frequently missed operation.
--   [ ] Identify frequently missed number facts.
--   [ ] Sort patterns by incorrect count.
--   [ ] Handle ties.
--   [ ] Add an empty state.
+-   [x] Identify the most frequently missed operation.
+-   [x] Identify frequently missed number facts.
+-   [x] Sort patterns by incorrect count.
+-   [x] Handle ties.
+-   [x] Add an empty state.
 
 ### 65. Add Mistake Details
 
--   [ ] Display active patterns.
--   [ ] Show incorrect counts.
--   [ ] Show mastery progress.
--   [ ] Show last incorrect date.
--   [ ] Allow mastered patterns to be viewed separately.
+-   [x] Display active patterns.
+-   [x] Show incorrect counts.
+-   [x] Show mastery progress.
+-   [x] Show last incorrect date.
+-   [x] Allow mastered patterns to be viewed separately.
 
 ## Phase 16: Accessibility
 
@@ -606,10 +606,10 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 
 ### 72. Optimize Statistics Layout
 
--   [ ] Convert wide tables to cards on small screens.
--   [ ] Prevent overlapping labels and values.
--   [ ] Keep recent sessions readable.
--   [ ] Use horizontal scrolling only when necessary.
+-   [x] Convert wide tables to cards on small screens.
+-   [x] Prevent overlapping labels and values.
+-   [x] Keep recent sessions readable.
+-   [x] Use horizontal scrolling only when necessary.
 
 ### 73. Add Child-Friendly Feedback
 

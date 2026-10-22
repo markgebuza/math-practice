@@ -107,6 +107,23 @@ describe('building statistics', () => {
     expect(getAccuracy(statistics.byOperation.multiplication)).toBe(0);
   });
 
+  it('counts mistake-review answers separately as well as in the totals', () => {
+    const statistics = buildStatistics([
+      ...MIXED,
+      makeAttempt({ source: 'mistake-review', operation: 'division', selfReportedCorrect: true }),
+      makeAttempt({ source: 'mistake-review', selfReportedCorrect: false }),
+      makeAttempt({ source: 'mistake-review', selfReportedCorrect: true }),
+    ]);
+    expect(statistics.mistakeReview).toEqual({ attempted: 3, correct: 2, incorrect: 1 });
+    expect(statistics.attempted).toBe(8);
+    expect(statistics.byOperation.division.attempted).toBe(2);
+    expect(buildStatistics(MIXED).mistakeReview).toEqual({
+      attempted: 0,
+      correct: 0,
+      incorrect: 0,
+    });
+  });
+
   it('uses the self-reported result, not the selected answer (DECISIONS 3.2)', () => {
     const statistics = buildStatistics([
       makeAttempt({ selectedAnswer: 7, correctAnswer: 7, selfReportedCorrect: false }),
@@ -126,6 +143,18 @@ describe('loadStatistics', () => {
     writeData('statistics', stored);
     writeData('attempts', MIXED.slice(0, 1));
     expect(loadStatistics()).toEqual(stored);
+  });
+
+  it('adds review counts from saved attempts to totals stored before they existed', () => {
+    const review = makeAttempt({ source: 'mistake-review', selfReportedCorrect: true });
+    const old: AppStatistics = buildStatistics([...MIXED, review]);
+    delete old.mistakeReview;
+    writeData('statistics', old);
+    writeData('attempts', [MIXED[0], review]);
+    const loaded = loadStatistics();
+    expect(loaded.attempted).toBe(6);
+    expect(loaded.mistakeReview).toEqual({ attempted: 1, correct: 1, incorrect: 0 });
+    expect(readData('statistics').value).toEqual(loaded);
   });
 
   it('rebuilds missing totals from saved attempts and stores them', () => {

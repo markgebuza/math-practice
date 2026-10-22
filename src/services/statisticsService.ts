@@ -1,5 +1,5 @@
 import type { AppStatistics, OperationStatistics, PracticeAttempt } from '../types';
-import { createEmptyStatistics } from '../types';
+import { createEmptyCounts, createEmptyStatistics } from '../types';
 import { calculateAccuracy } from '../utils/math';
 import { clearData, readData, saveAttempt, writeData } from './storageService';
 
@@ -21,6 +21,7 @@ export function addAttemptToStatistics(
   attempt: PracticeAttempt,
 ): AppStatistics {
   const isCorrect = attempt.selfReportedCorrect;
+  const reviewCounts = statistics.mistakeReview ?? createEmptyCounts();
   return {
     ...addToCounts(statistics, isCorrect),
     byOperation: {
@@ -31,6 +32,8 @@ export function addAttemptToStatistics(
       ...statistics.byDifficulty,
       [attempt.difficulty]: addToCounts(statistics.byDifficulty[attempt.difficulty], isCorrect),
     },
+    mistakeReview:
+      attempt.source === 'mistake-review' ? addToCounts(reviewCounts, isCorrect) : reviewCounts,
   };
 }
 
@@ -42,8 +45,11 @@ export function buildStatistics(attempts: PracticeAttempt[]): AppStatistics {
 // Only when it is missing or unreadable is it rebuilt from the saved attempts.
 export function loadStatistics(): AppStatistics {
   const stored = readData('statistics');
-  if (stored.status === 'ok' || stored.status === 'unavailable') {
+  if (stored.status === 'unavailable') {
     return stored.value;
+  }
+  if (stored.status === 'ok') {
+    return stored.value.mistakeReview ? stored.value : addMissingReviewCounts(stored.value);
   }
   const attempts = readData('attempts').value;
   if (attempts.length === 0) {
@@ -52,6 +58,19 @@ export function loadStatistics(): AppStatistics {
   const rebuilt = buildStatistics(attempts);
   writeData('statistics', rebuilt);
   return rebuilt;
+}
+
+// Totals saved before review counts existed get them from the saved review attempts.
+function addMissingReviewCounts(statistics: AppStatistics): AppStatistics {
+  const reviewAttempts = readData('attempts').value.filter(
+    (attempt) => attempt.source === 'mistake-review',
+  );
+  const withReview = {
+    ...statistics,
+    mistakeReview: buildStatistics(reviewAttempts).mistakeReview,
+  };
+  writeData('statistics', withReview);
+  return withReview;
 }
 
 // Saves the attempt and adds it to the totals exactly once; a repeated attempt changes nothing.

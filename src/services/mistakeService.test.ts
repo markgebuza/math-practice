@@ -5,9 +5,12 @@ import {
   applyMasteryThreshold,
   applyReviewAnswer,
   loadMistakePatterns,
+  mostMissedFacts,
+  mostMissedOperations,
   nextReviewPattern,
   rankPatterns,
   recordMistake,
+  sortByIncorrectCount,
 } from './mistakeService';
 import { readData, STORAGE_KEYS, writeData } from './storageService';
 
@@ -377,5 +380,71 @@ describe('applyReviewAnswer', () => {
     const patterns = applyReviewAnswer([makePattern(), other], 'pattern-1', false, at, 3);
     expect(patterns[1]).toBe(other);
     expect(applyReviewAnswer([other], 'gone', false, at, 3)).toEqual([other]);
+  });
+});
+
+describe('frequently missed areas', () => {
+  const patterns = [
+    makePattern({ id: 'a', operation: 'addition', incorrectCount: 2 }),
+    makePattern({
+      id: 'm-old',
+      operation: 'multiplication',
+      incorrectCount: 3,
+      lastIncorrectAt: '2026-10-19T10:00:00.000Z',
+    }),
+    makePattern({
+      id: 'm-new',
+      operation: 'multiplication',
+      incorrectCount: 3,
+      lastIncorrectAt: '2026-10-21T10:00:00.000Z',
+    }),
+    makePattern({ id: 'd', operation: 'division', incorrectCount: 5, mastered: true }),
+    makePattern({ id: 's', operation: 'subtraction', incorrectCount: 1 }),
+    makePattern({ id: 'a2', operation: 'addition', incorrectCount: 1 }),
+  ];
+
+  it('sorts by incorrect count, then most recently missed first', () => {
+    expect(sortByIncorrectCount(patterns).map((p) => p.id)).toEqual([
+      'd',
+      'm-new',
+      'm-old',
+      'a',
+      's',
+      'a2',
+    ]);
+    expect(patterns[0].id).toBe('a');
+  });
+
+  it('lists the top 5 most missed facts', () => {
+    expect(mostMissedFacts(patterns).map((p) => p.id)).toEqual(['d', 'm-new', 'm-old', 'a', 's']);
+    expect(mostMissedFacts(patterns, 2)).toHaveLength(2);
+  });
+
+  it('finds the operation with the most misses, counting mastered patterns', () => {
+    expect(mostMissedOperations(patterns)).toEqual({
+      operations: ['multiplication'],
+      incorrectCount: 6,
+    });
+    expect(mostMissedOperations(patterns.slice(0, 3))).toEqual({
+      operations: ['multiplication'],
+      incorrectCount: 6,
+    });
+  });
+
+  it('returns every operation tied for the most misses, in the usual order', () => {
+    const tied = [
+      makePattern({ id: 'd', operation: 'division', incorrectCount: 4 }),
+      makePattern({ id: 'm', operation: 'multiplication', incorrectCount: 4 }),
+      makePattern({ id: 'a', operation: 'addition', incorrectCount: 3 }),
+    ];
+    expect(mostMissedOperations(tied)).toEqual({
+      operations: ['multiplication', 'division'],
+      incorrectCount: 4,
+    });
+  });
+
+  it('returns no operation without patterns', () => {
+    expect(mostMissedOperations([])).toEqual({ operations: [], incorrectCount: 0 });
+    expect(mostMissedFacts([])).toEqual([]);
   });
 });

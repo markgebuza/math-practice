@@ -3,10 +3,12 @@ import { Button } from '../components/common/Button';
 import { ConfirmDialog } from '../components/common/ConfirmDialog';
 import { PageContainer } from '../components/layout/PageContainer';
 import { DifficultyStatistics } from '../components/statistics/DifficultyStatistics';
+import { MistakeStatistics } from '../components/statistics/MistakeStatistics';
 import { OperationStatistics } from '../components/statistics/OperationStatistics';
 import { RecentSessions } from '../components/statistics/RecentSessions';
 import { StatisticsOverview } from '../components/statistics/StatisticsOverview';
 import { useStatistics } from '../hooks/useStatistics';
+import { createEmptyCounts } from '../types';
 import '../components/statistics/Statistics.css';
 
 const RESET_DONE =
@@ -14,7 +16,7 @@ const RESET_DONE =
 const RESET_FAILED = "Your statistics couldn't be reset right now. Please try again later.";
 
 export function StatisticsPage() {
-  const { statistics, recentSessions, reset } = useStatistics();
+  const { statistics, recentSessions, mistakePatterns, masteryThreshold, reset } = useStatistics();
   const [isConfirming, setIsConfirming] = useState(false);
   const [message, setMessage] = useState('');
   const messageRef = useRef<HTMLParagraphElement>(null);
@@ -45,6 +47,11 @@ export function StatisticsPage() {
             <DifficultyStatistics byDifficulty={statistics.byDifficulty} />
           </>
         )}
+        <MistakeStatistics
+          patterns={mistakePatterns}
+          masteryThreshold={masteryThreshold}
+          reviewCounts={statistics.mistakeReview ?? createEmptyCounts()}
+        />
         <RecentSessions sessions={recentSessions} />
         {hasData && (
           <div className="statistics-page__reset">
