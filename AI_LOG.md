@@ -682,3 +682,87 @@ category, and a forced generation failure falling back to a valid question.
 - The route error page replaces the whole layout (it is the root route's `errorElement`), so the header is not shown on it; Return Home is the way out. Route Return Home navigates inside the app instead of reloading; if the crash was caused by in-memory state, the outer boundary's reload is not used. The outer boundary's reload (`window.location.assign`) can't run in jsdom, so only its reset/handler call was tested.
 - The storage banner and the missing-session notice were already simple and are inline (not blocking), so they keep their own components instead of `ErrorMessage`.
 - The "Not implemented: HTMLCanvasElement's getContext()" lines in the test output come from axe in existing tests and are not failures.
+
+### [2026-10-22 10:30] Phase 20: Testing
+**My prompt:** Implement Phase 20 (tasks 79–82). First produce a gap analysis: every test listed in spec
+section 20 and TODO tasks 79–81 → does a test exist (file name) or is it missing?
+Then write the missing tests, including the 8-step integration test in spec section 20.
+Run a coverage report and summarize it.
+
+Finally, produce a table of the 16 acceptance criteria in spec section 25:
+criterion | met? | how verified. Be honest about anything partial.
+Task 82 items that need a human stay unchecked for me.
+
+**What you did:**
+- Run by a Claude Code subagent using the Phase 20 prompt from PROMPTS.md (not manually tested by me before commit).
+- Gap analysis (grep over all 39 test files, then read the relevant tests). Only three real gaps existed: the 8-step flow as **one** UI test (`MistakeReview.test.tsx` covers steps 1–4 and 6–8 but never checks statistics), a mixed-operation session through the UI, and a full addition session through the UI. Everything else already had tests:
+
+| Spec 20 / TODO 79–81 item | Test file → test |
+|---|---|
+| Arithmetic generation (all generators) | `questionGenerator.test.ts` → "level %i" × 4 operations, "generateQuestionFromOperations" |
+| Difficulty boundaries | `questionGenerator.test.ts` → per-level range tests; `validation.test.ts` → "rejects a question outside its difficulty level", "allows a 0 factor only at levels that allow it" |
+| Distractors and choice uniqueness / duplicate distractors | `distractors.test.ts` → "edge cases near zero", "three valid distractors…", "falls back safely…"; `validation.test.ts` → "requires exactly four unique choices…" |
+| Similar-question generation | `similarQuestionGenerator.test.ts` (8 tests) |
+| Statistics and accuracy | `statisticsService.test.ts`; `math.test.ts` → "calculateAccuracy" |
+| Mastery rules | `mistakeService.test.ts` → "applyReviewAnswer", "mastery threshold"; `usePracticeSession.review.test.tsx` |
+| Storage serialization and validation | `storageService.test.ts` → "reads back valid %s exactly as written", "corrupted %s", record-level validation tests |
+| Operation and difficulty selection | `PracticeSetupPage.test.tsx` (14 tests) |
+| Answer selection / flip / card front and back | `QuestionCard.test.tsx` → "QuestionCard front", "QuestionCard back", "QuestionCard flipping" |
+| Correct/incorrect buttons | `QuestionCard.test.tsx` → back tests, "ignores a fast double-click on a result button" |
+| Session progress and completion | `ProgressBar.test.tsx`; `PracticePage.test.tsx` → "goes to the summary after the last question…"; `SessionSummaryPage.test.tsx` |
+| Statistics display | `StatisticsPage.test.tsx` |
+| Reset confirmation / confirmation dialogs | `ConfirmDialog.test.tsx`; `StatisticsPage.test.tsx` → "keeps everything when the reset is cancelled", "clears attempts…after confirmation"; `SettingsPage.test.tsx` → "Clear All Application Data"; `PracticePage.test.tsx` → end-session dialog |
+| 8-step integration test | **MISSING as one test** → added `PracticeFlow.integration.test.tsx` → "a wrong answer updates statistics, stores a pattern and comes back as a similar question" |
+| Full addition session | **MISSING via UI** (UI sessions used subtraction/division) → covered by the new 8-step test (5 addition questions to the summary and Statistics) |
+| Mixed-operation session | **MISSING via UI** → added "plays a full mixed-operation session at Level 2 and records every answer" |
+| Continuous practice | `PracticePage.test.tsx` → "continuous practice" (3); `SessionSummaryPage.test.tsx` |
+| Incorrect answer creates a pattern | `usePracticeSession.test.tsx` → "mistake patterns"; `mistakeService.test.ts` → "recordMistake" |
+| Mistake-review generation / mastery completion | `MistakeReview.test.tsx`; `usePracticeSession.review.test.tsx` |
+| Persistence after refresh / refresh during a session | `PracticePage.storage.test.tsx` → "keeps data after a simulated reload"; `PracticePage.recovery.test.tsx` → "session recovery after a refresh" |
+| Resetting statistics | `StatisticsPage.test.tsx`; `statisticsService.test.ts` → "resetStatistics" |
+| No stored data | `storageService.test.ts` → "with no stored data"; `StatisticsPage.test.tsx` → "shows friendly empty states…" |
+| Corrupted storage | `storageService.test.ts` → "corrupted %s"; `StorageRecovery.test.tsx` |
+| Zero attempts | `statisticsService.test.ts` / `math.test.ts` → "is 0 with zero attempts…"; `SessionSummaryPage.test.tsx` → "says no questions were answered…" |
+| All-correct / all-incorrect sessions | `SessionSummary.test.tsx` → "cheers an all-correct session", "stays encouraging when every answer was wrong"; `math.test.ts` |
+| Division-by-zero prevention | `questionGenerator.test.ts` → "division … never divide by zero"; `validation.test.ts` → "rejects division by zero" |
+| Small screen widths | No automated test (jsdom does no layout). Verified by the Phase 17 headless-Chrome screenshots and overflow measurements at 375/768/1024/1280 px |
+
+- New `src/app/PracticeFlow.integration.test.tsx` (2 tests, real routes + `AppProvider`, seeded randomness, nothing mocked): (1) Home → Start Practice → 5 questions → pick an answer (`aria-pressed`) → Flip Card (back heading and "Correct answer") → I Got It Wrong → stored statistics updated (total, addition, Level 1) → pattern stored → finish the session (summary 5/4/1) → Statistics page shows 5/4/1, 80%, addition Incorrect 1, Facts to practice 1 → Practice → Practice my mistakes → Start Session → a similar question (shares a number with the missed fact, never the exact missed question). (2) Mixed operations at Level 2, 10 questions: all four operations appear, summary totals 10/7/3, attempts saved in the order shown, 3 patterns.
+- One new unit test in `validation.test.ts` ("rejects fractional operands"): the only uncovered line in the coverage report that is real behavior.
+- Coverage: added `@vitest/coverage-v8` **5.0.5** (exact, same version as vitest; MIT license) as a devDependency, a `test:coverage` script (`vitest --run --coverage`) and a `coverage` block in `vite.config.ts` (v8, `src/**/*.{ts,tsx}`, excluding tests, `src/test/**`, `src/main.tsx`, `*.d.ts`; text + html reporters; `coverage/` was already git-ignored).
+- The first coverage run failed 3 existing tests in `PracticePage.test.tsx`: "can be played start to finish with only Tab, Space and Enter" and "keeps going without a fixed total…" (both ~4 s normally) passed the 5 s default timeout under instrumentation, and "resets the selection… focuses the new card" failed as a knock-on. Gave the two long tests a 15 s timeout like the other long UI tests; the next coverage run passed fully (a Python edit attempt failed first on an exact-match assertion and was redone with the Edit tool).
+
+**Verification:**
+- `npm run lint`: pass, 0 errors, 0 warnings.
+- `npm test -- --run`: 40 files, 496/496 passed (493 before; 3 new).
+- `npm run test:coverage`: 40 files, 496/496 passed. Statements 98.59% (979/993), branches 96.95% (796/821), functions 99.11% (335/338), lines 98.52% (938/952). By folder (statements / branches): app 95.8 / 96.1; components/common, layout, setup, statistics 100 / 100; components/practice 100 / 95.7; hooks 96.3 / 90.4; pages 100 / 95.0; services 98.3 / 97.7; utils 100 / 99.1. Least covered: `App.tsx` 66.7% (the outer boundary's `window.location.assign` reload, which jsdom can't run), `storageContext.ts` 80% and `usePracticeSession.ts` 94.2% (the "must be used inside AppProvider" guards and no-op guards), `questionGenerator.ts` 93.8% (the "No division question fits" throw and the rethrow of unexpected errors, unreachable with the real level tables), `storageService.ts` 98.6% (`getItem` throwing for the active session only; migration from an older schema version, none exists yet). No tests were added just to raise these.
+- `npm run build`: pass (JS 379.95 kB, 116.81 kB gzip, unchanged: only tests and config changed).
+- Acceptance criteria (spec 25):
+
+| # | Criterion | Met? | How verified |
+|---|---|---|---|
+| 1 | Select operations and difficulty | Yes | `PracticeSetupPage.test.tsx`; `PracticeFlow.integration.test.tsx` (mixed, Level 2) |
+| 2 | Fixed-length or continuous sessions | Yes | `PracticePage.test.tsx` (fixed → summary; "continuous practice"); `SessionSummaryPage.test.tsx` |
+| 3 | Multiple-choice card with four unique choices | Yes | `QuestionCard.test.tsx` "shows the question, four choices…"; `distractors.test.ts`; `validation.test.ts`; generated questions all pass `validateQuestion` in `questionGenerator.test.ts` |
+| 4 | Select an answer and flip the card | Yes | `QuestionCard.test.tsx`; `PracticeFlow.integration.test.tsx` steps 2–3 |
+| 5 | Back reveals the correct answer | Yes | `QuestionCard.test.tsx` "QuestionCard back"; `PracticeFlow.integration.test.tsx` step 3 |
+| 6 | Mark the attempt correct or incorrect | Yes | `QuestionCard.test.tsx`; `PracticePage.test.tsx`; `PracticeFlow.integration.test.tsx` step 4 |
+| 7 | Each attempt counted exactly once | Yes | `practiceSession.test.ts` "counts each attempt exactly once"; `PracticePage.test.tsx` fast double-click; `statisticsService.test.ts` "counts the same question only once"; `StatisticsPage.test.tsx` "counts a finished practice session exactly once"; `PracticePage.recovery.test.tsx` "…without counting twice" |
+| 8 | Incorrect questions create or update patterns | Yes | `mistakeService.test.ts`; `usePracticeSession.test.tsx`; `MistakeReview.test.tsx`; `PracticeFlow.integration.test.tsx` step 6 |
+| 9 | Similar questions from mistakes | Yes | `similarQuestionGenerator.test.ts`; `MistakeReview.test.tsx`; `PracticeFlow.integration.test.tsx` steps 7–8 |
+| 10 | Statistics persist after restarting the browser | Partial | Automated with jsdom `localStorage` and a simulated reload (`PracticePage.storage.test.tsx`, `storageService.test.ts`); a real browser close/reopen needs your check |
+| 11 | Attempted, correct and incorrect totals | Yes | `StatisticsPage.test.tsx` "shows overall totals and accuracy"; `PracticeFlow.integration.test.tsx` |
+| 12 | Statistics by operation and difficulty | Yes | `StatisticsPage.test.tsx` "shows a card for each operation and each level"; `statisticsService.test.ts` |
+| 13 | Reset after confirmation | Yes | `StatisticsPage.test.tsx` (cancel keeps data, confirm clears); `ConfirmDialog.test.tsx` |
+| 14 | No account or backend | Yes | Grep of `src/` finds no `fetch`, `XMLHttpRequest`, `WebSocket` or `sendBeacon`; `vite build` output is static files; all data in `localStorage` |
+| 15 | Keyboard navigation | Partial | `PracticePage.test.tsx` "can be played start to finish with only Tab, Space and Enter"; number keys in `QuestionCard.test.tsx`; focus trap in `ConfirmDialog.test.tsx`; focus moves in `AppRoutes.test.tsx`. A real keyboard-only session in a browser (task 82) is still yours |
+| 16 | Works on desktop, tablet and mobile | Partial | Phase 17 headless-Chrome screenshots and overflow checks at 375/768/1024/1280 px; real phones/tablets and other browsers not tested |
+
+- TODO: checked the remaining items of tasks 79, 80 and 81 (re-verified the ones earlier phases had checked: each has the test listed above). Task 82: "Run an automated accessibility checker" stays checked (axe in `src/app/Accessibility.test.tsx`, passing); the other five stay unchecked for you.
+- Manual checklist for you: (1) `npm run test:coverage`, then open `coverage/index.html`. (2) Task 82: play a full session with only Tab/Space/Enter/number keys; try a screen reader (NVDA or Narrator) on setup, card front/back and summary; turn off animation effects in Windows (Settings > Accessibility > Visual effects) and check the card changes without the turn; zoom the browser to 200% on each page; review the axe results. (3) Criterion 10: answer a few questions, close the browser completely, reopen the app and check Statistics. (4) Criterion 16: open the app on a real phone and tablet (e.g. `npm run dev -- --host`).
+
+**Problems / open issues:**
+- Small screen widths have no automated test (jsdom does no layout); they rest on the Phase 17 screenshots.
+- Coverage instrumentation slows the UI tests, which is why two long tests needed a longer timeout; future long UI tests may need the same.
+- The 8-step test accepts a reversed fact (e.g. 4 + 3 after missing 3 + 4) as the similar question, because spec 6.4 lists reversed operands as a similarity strategy; it only rejects the exact same question. (My first version used `isSameQuestion`, which treats reversed addition as the same, and failed for this reason.)
+- High coverage mostly comes from UI tests running through the real pages; it shows which lines ran, not that every behavior is asserted.

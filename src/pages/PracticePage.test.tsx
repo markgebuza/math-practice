@@ -197,7 +197,7 @@ describe('PracticePage', () => {
 
     await screen.findByRole('heading', { level: 1, name: 'Session Summary' });
     expect(router.state.location.pathname).toBe('/practice/summary');
-  });
+  }, 15000);
 
   describe('feedback messages', () => {
     afterEach(() => {
@@ -318,7 +318,7 @@ describe('PracticePage', () => {
       }
       expect(screen.getByText('Question 26')).toBeInTheDocument();
       expect(screen.getByText('25 questions answered so far')).toBeInTheDocument();
-    });
+    }, 15000);
 
     it('asks before ending, and Keep Practicing stays on the same question', async () => {
       const router = await startSession(continuous);

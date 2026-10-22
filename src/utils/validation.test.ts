@@ -27,6 +27,12 @@ describe('validateQuestion', () => {
     ]);
   });
 
+  it('rejects fractional operands', () => {
+    expect(
+      validateQuestion(question({ firstOperand: 7.5, secondOperand: 7.5, correctAnswer: 15 })),
+    ).toContain('Operands must be whole numbers');
+  });
+
   it('rejects an unsupported difficulty', () => {
     expect(validateQuestion(question({ difficulty: 5 as never }))).toEqual([
       'Unsupported difficulty: 5',

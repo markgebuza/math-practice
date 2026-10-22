@@ -664,28 +664,28 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 
 ### 79. Complete Unit Tests
 
--   [ ] Test all arithmetic generators.
--   [ ] Test difficulty boundaries.
--   [ ] Test distractors and choice uniqueness.
+-   [x] Test all arithmetic generators.
+-   [x] Test difficulty boundaries.
+-   [x] Test distractors and choice uniqueness.
 -   [x] Test similar-question generation.
 -   [x] Test statistics calculations.
 -   [x] Test mastery rules.
--   [ ] Test storage serialization and validation.
+-   [x] Test storage serialization and validation.
 
 ### 80. Complete Component Tests
 
--   [ ] Test operation and difficulty selection.
--   [ ] Test answer selection and card flipping.
--   [ ] Test right/wrong buttons.
--   [ ] Test progress and session completion.
+-   [x] Test operation and difficulty selection.
+-   [x] Test answer selection and card flipping.
+-   [x] Test right/wrong buttons.
+-   [x] Test progress and session completion.
 -   [x] Test statistics display.
--   [ ] Test confirmation dialogs.
+-   [x] Test confirmation dialogs.
 
 ### 81. Complete Integration Tests
 
--   [ ] Test a full addition session.
--   [ ] Test a mixed-operation session.
--   [ ] Test continuous practice.
+-   [x] Test a full addition session.
+-   [x] Test a mixed-operation session.
+-   [x] Test continuous practice.
 -   [x] Test an incorrect answer creating a pattern.
 -   [x] Test mistake-review generation.
 -   [x] Test mastery completion.
