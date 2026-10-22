@@ -1,6 +1,12 @@
 import { act, renderHook } from '@testing-library/react';
 import { AppProvider } from '../app/AppProvider';
+import { generateNextQuestion } from '../services/questionGenerator';
 import { usePracticeSession } from './usePracticeSession';
+
+vi.mock('../services/questionGenerator', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../services/questionGenerator')>();
+  return { ...actual, generateNextQuestion: vi.fn(actual.generateNextQuestion) };
+});
 
 function renderSession() {
   return renderHook(() => usePracticeSession(), { wrapper: AppProvider });
@@ -70,5 +76,28 @@ describe('usePracticeSession', () => {
     ]);
     expect(result.current.currentSession).toMatchObject({ attempted: 1, correct: 0, incorrect: 1 });
     expect(result.current.currentQuestion?.id).not.toBe(question.id);
+  });
+
+  it('stops generating questions once a fixed-length session is complete', () => {
+    const { result } = renderSession();
+    act(() => {
+      result.current.startSession({ operations: ['addition'], difficulty: 1, sessionLength: 2 });
+    });
+    vi.mocked(generateNextQuestion).mockClear();
+    for (let i = 0; i < 2; i++) {
+      act(() => {
+        result.current.recordResult({
+          selectedAnswer: result.current.currentQuestion!.choices[0],
+          selfReportedCorrect: true,
+        });
+      });
+    }
+    expect(generateNextQuestion).toHaveBeenCalledTimes(1);
+    expect(result.current.isActive).toBe(false);
+    expect(result.current.currentQuestion).toBeNull();
+    expect(result.current.currentSession).toMatchObject({
+      attempted: 2,
+      completedAt: expect.any(String),
+    });
   });
 });

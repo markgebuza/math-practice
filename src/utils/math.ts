@@ -5,6 +5,10 @@ export function randomInt(min: number, max: number) {
   return min + Math.floor(Math.random() * (max - min + 1));
 }
 
+export function calculateAccuracy(correct: number, attempted: number) {
+  return attempted > 0 ? Math.round((correct / attempted) * 100) : 0;
+}
+
 export function randomItem<T>(items: readonly T[]): T {
   if (items.length === 0) {
     throw new RangeError('Cannot pick from an empty list');

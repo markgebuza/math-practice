@@ -1,4 +1,4 @@
-import { randomInt, randomItem } from './math';
+import { calculateAccuracy, randomInt, randomItem } from './math';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -40,5 +40,18 @@ describe('randomItem', () => {
 
   it('rejects an empty list', () => {
     expect(() => randomItem([])).toThrow(RangeError);
+  });
+});
+
+describe('calculateAccuracy', () => {
+  it('is 0 with no attempts, never NaN or Infinity', () => {
+    expect(calculateAccuracy(0, 0)).toBe(0);
+  });
+
+  it('gives whole percentages for all-correct, all-wrong and mixed results', () => {
+    expect(calculateAccuracy(5, 5)).toBe(100);
+    expect(calculateAccuracy(0, 5)).toBe(0);
+    expect(calculateAccuracy(4, 5)).toBe(80);
+    expect(calculateAccuracy(2, 3)).toBe(67);
   });
 });

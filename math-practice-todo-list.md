@@ -285,31 +285,31 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 -   [x] Generate questions without a fixed endpoint.
 -   [x] Add **End Session**.
 -   [x] Confirm before ending if appropriate.
--   [ ] Show the summary when the session ends.
+-   [x] Show the summary when the session ends.
 
 ## Phase 8: Session Summary
 
 ### 32. Detect Session Completion
 
--   [ ] Compare attempts with the configured session length.
--   [ ] Stop generating when complete.
--   [ ] Save the completion timestamp.
--   [ ] Navigate to the summary page.
+-   [x] Compare attempts with the configured session length.
+-   [x] Stop generating when complete.
+-   [x] Save the completion timestamp.
+-   [x] Navigate to the summary page.
 
 ### 33. Create the Session Summary Page
 
--   [ ] Display attempted, correct, and incorrect totals.
--   [ ] Calculate accuracy.
--   [ ] Display operations and difficulty.
--   [ ] Display mistake-review question count.
+-   [x] Display attempted, correct, and incorrect totals.
+-   [x] Calculate accuracy.
+-   [x] Display operations and difficulty.
+-   [x] Display mistake-review question count.
 
 ### 34. Add Summary Actions
 
--   [ ] Add **Practice Again**.
+-   [x] Add **Practice Again**.
 -   [ ] Add **Practice Mistakes**.
--   [ ] Add **Change Settings**.
--   [ ] Add **View Statistics**.
--   [ ] Add **Return Home**.
+-   [x] Add **Change Settings**.
+-   [x] Add **View Statistics**.
+-   [x] Add **Return Home**.
 
 ## Phase 9: Local Data Storage
 
