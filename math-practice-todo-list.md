@@ -306,7 +306,7 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 ### 34. Add Summary Actions
 
 -   [x] Add **Practice Again**.
--   [ ] Add **Practice Mistakes**.
+-   [x] Add **Practice Mistakes**.
 -   [x] Add **Change Settings**.
 -   [x] Add **View Statistics**.
 -   [x] Add **Return Home**.
@@ -340,7 +340,7 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 -   [x] Save session information.
 -   [x] Save completion details.
 -   [x] Load recent sessions.
--   [ ] Limit or summarize old records if needed.
+-   [x] Limit or summarize old records if needed.
 
 ### 39. Persist Practice Attempts
 

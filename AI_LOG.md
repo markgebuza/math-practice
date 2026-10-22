@@ -836,3 +836,19 @@ Confirm with `git status` and `git ls-files` that no secrets or .env files are t
 - Node version for Netlify is set only in `netlify.toml` (no `.nvmrc`), so local Node is not pinned; `engines` in package.json still says `>=22.22`.
 - `public/favicon.svg` is still the default Vite logo (not a privacy issue, just not app branding).
 - "Test the production build locally" was checked from curl on every route plus screenshots of 4 pages, not a full click-through in a real browser.
+
+### [2026-10-22 10:50] TODO bookkeeping after Phase 22
+**My prompt:** keep going
+**What you did:**
+- Final check after all phases were committed by subagents: lint, tests, build and format check on the whole repo.
+- Found two TODO items still unchecked although later phases built and tested them. Checked them off:
+  - Task 34 "Add **Practice Mistakes**": enabled in Phase 14; covered by `src/pages/SessionSummaryPage.test.tsx` ("enables Practice Mistakes after a wrong answer and starts a review session").
+  - Task 38 "Limit or summarize old records if needed": done in Phase 21; covered by `src/app/LargeHistory.test.tsx` ("keeps exact totals after summarizing old history...").
+**Verification:**
+- `npm run lint`: pass, 0 errors. `npm test -- --run`: 41 files, 514/514 passed. `npm run build`: pass. `npm run format:check`: clean.
+- `git ls-files`: no .env, key or secret files tracked. No git remote configured.
+**Problems / open issues:**
+- Still unchecked and needing you: manual browser/device testing (task 87), keyboard-only session, screen reader, 200% zoom, larger fonts, reduced motion (tasks 66–69, 82), slower devices (85), browser-restart persistence (39), the optional card transition (29), and deployment (89).
+- "Detect missing or older versions" (task 36) can't be exercised until a schema version 2 exists.
+- The "Suggested First Implementation Sequence" checklist at the end of the TODO is a summary of earlier phases and was left as-is.
+- `public/favicon.svg` is still the default Vite logo.
