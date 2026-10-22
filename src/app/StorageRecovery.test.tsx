@@ -22,6 +22,19 @@ const ATTEMPT: PracticeAttempt = {
   attemptedAt: '2026-10-21T10:00:00.000Z',
 };
 
+const ARCHIVED_ATTEMPT: PracticeAttempt = {
+  ...ATTEMPT,
+  id: 'attempt-0',
+  questionId: 'question-0',
+  operation: 'addition',
+  firstOperand: 3,
+  secondOperand: 4,
+  correctAnswer: 7,
+  selectedAnswer: 7,
+  selfReportedCorrect: true,
+  difficulty: 1,
+};
+
 const DATA: StoredData = {
   settings: { ...DEFAULT_SETTINGS, soundEffects: true, masteryThreshold: 4 },
   sessions: [
@@ -52,7 +65,9 @@ const DATA: StoredData = {
       mastered: false,
     },
   ],
-  statistics: buildStatistics([ATTEMPT]),
+  // One older attempt is no longer in the detailed list; only its summary is kept.
+  statistics: buildStatistics([ARCHIVED_ATTEMPT, ATTEMPT]),
+  archivedStatistics: buildStatistics([ARCHIVED_ATTEMPT]),
 };
 
 const KEYS = Object.keys(DATA) as DataKey[];
@@ -80,7 +95,7 @@ describe.each(KEYS)('when stored %s is corrupted', (corruptKey) => {
     // Attempts are only read when needed, so read every category once more to be sure.
     const corrupt = readData(corruptKey);
     if (corruptKey === 'statistics') {
-      // Corrupted totals are rebuilt from the saved attempts instead of starting from zero.
+      // Corrupted totals are rebuilt from the summary and the saved attempts instead of starting from zero.
       expect(corrupt.value).toEqual(DATA.statistics);
     } else {
       expect(['reset', 'missing']).toContain(corrupt.status);

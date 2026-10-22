@@ -705,25 +705,25 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 
 ### 83. Optimize React Rendering
 
--   [ ] Identify unnecessary re-renders.
--   [ ] Memoize expensive statistics calculations.
--   [ ] Keep question generation out of render logic.
--   [ ] Avoid unnecessary global state updates.
+-   [x] Identify unnecessary re-renders.
+-   [x] Memoize expensive statistics calculations.
+-   [x] Keep question generation out of render logic.
+-   [x] Avoid unnecessary global state updates.
 
 ### 84. Manage Large Practice Histories
 
--   [ ] Test with several thousand attempts.
--   [ ] Measure local-storage usage.
--   [ ] Limit detailed recent sessions.
--   [ ] Summarize older attempts when needed.
--   [ ] Preserve aggregate statistics.
+-   [x] Test with several thousand attempts.
+-   [x] Measure local-storage usage.
+-   [x] Limit detailed recent sessions.
+-   [x] Summarize older attempts when needed.
+-   [x] Preserve aggregate statistics.
 
 ### 85. Improve Loading Performance
 
--   [ ] Measure initial bundle size.
--   [ ] Lazy-load statistics and settings pages.
--   [ ] Remove unused dependencies.
--   [ ] Optimize fonts and images.
+-   [x] Measure initial bundle size.
+-   [x] Lazy-load statistics and settings pages.
+-   [x] Remove unused dependencies.
+-   [x] Optimize fonts and images.
 -   [ ] Test on slower devices.
 
 ## Phase 22: Release Preparation

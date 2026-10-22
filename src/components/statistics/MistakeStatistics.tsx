@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react';
 import {
   activePatterns,
   mostMissedFacts,
@@ -99,15 +100,26 @@ function PatternList({
   );
 }
 
-export function MistakeStatistics({
+function groupPatterns(patterns: MistakePattern[]) {
+  const sorted = sortByIncorrectCount(patterns);
+  return {
+    active: activePatterns(sorted),
+    mastered: sorted.filter((pattern) => pattern.mastered),
+    mostMissed: mostMissedOperations(patterns),
+    missedFacts: mostMissedFacts(patterns),
+  };
+}
+
+// Memoized so opening the reset dialog or showing a message doesn't re-sort every pattern.
+export const MistakeStatistics = memo(function MistakeStatistics({
   patterns,
   masteryThreshold,
   reviewCounts,
 }: MistakeStatisticsProps) {
-  const sorted = sortByIncorrectCount(patterns);
-  const active = activePatterns(sorted);
-  const mastered = sorted.filter((pattern) => pattern.mastered);
-  const mostMissed = mostMissedOperations(patterns);
+  const { active, mastered, mostMissed, missedFacts } = useMemo(
+    () => groupPatterns(patterns),
+    [patterns],
+  );
   const counts = [
     { label: 'Facts to practice', value: active.length },
     { label: 'Facts mastered', value: mastered.length },
@@ -143,7 +155,7 @@ export function MistakeStatistics({
           <div className="mistake-stats__group">
             <h3>Most missed facts</h3>
             <ol className="missed-facts">
-              {mostMissedFacts(patterns).map((pattern) => (
+              {missedFacts.map((pattern) => (
                 <li key={pattern.id} className="missed-facts__item">
                   <Fact pattern={pattern} />
                   <span className="mistake-stats__note">
@@ -174,4 +186,4 @@ export function MistakeStatistics({
       )}
     </section>
   );
-}
+});

@@ -20,6 +20,8 @@ export interface StoredData {
   attempts: PracticeAttempt[];
   mistakePatterns: MistakePattern[];
   statistics: AppStatistics;
+  // Not in the spec: totals of old attempts removed from the detailed history.
+  archivedStatistics: AppStatistics;
 }
 
 export type DataKey = keyof StoredData;
@@ -30,16 +32,27 @@ export const STORAGE_KEYS: Record<DataKey | 'version' | 'activeSession', string>
   attempts: 'mathPractice.attempts',
   mistakePatterns: 'mathPractice.mistakePatterns',
   statistics: 'mathPractice.statistics',
+  archivedStatistics: 'mathPractice.archivedStatistics',
   version: 'mathPractice.version',
   activeSession: 'mathPractice.activeSession',
 };
 
-const DATA_KEYS: DataKey[] = ['settings', 'sessions', 'attempts', 'mistakePatterns', 'statistics'];
+const DATA_KEYS: DataKey[] = [
+  'settings',
+  'sessions',
+  'attempts',
+  'mistakePatterns',
+  'statistics',
+  'archivedStatistics',
+];
 
 export const SCHEMA_VERSION = 1;
 
 // DECISIONS 3.4
 export const RECENT_SESSION_LIMIT = 20;
+
+// Older sessions are dropped; they are only shown as recent sessions and are not part of the totals.
+export const SESSION_HISTORY_LIMIT = 50;
 
 export type Migration = (storage: Storage) => void;
 
@@ -176,6 +189,7 @@ const PARSERS: { [K in DataKey]: (value: unknown) => StoredData[K] | null } = {
   attempts: listOf(isAttempt),
   mistakePatterns: listOf(isMistakePattern),
   statistics: (value) => (isStatistics(value) ? value : null),
+  archivedStatistics: (value) => (isStatistics(value) ? value : null),
 };
 
 const DEFAULTS: { [K in DataKey]: () => StoredData[K] } = {
@@ -187,6 +201,7 @@ const DEFAULTS: { [K in DataKey]: () => StoredData[K] } = {
   attempts: () => [],
   mistakePatterns: () => [],
   statistics: createEmptyStatistics,
+  archivedStatistics: createEmptyStatistics,
 };
 
 // Reading window.localStorage itself throws in some browsers when site data is blocked.
@@ -381,17 +396,9 @@ export function initializeStorage(): boolean {
   }
 }
 
-export function saveAttempt(attempt: PracticeAttempt): boolean {
-  const attempts = readData('attempts').value;
-  if (attempts.some((saved) => saved.questionId === attempt.questionId)) {
-    return true;
-  }
-  return writeData('attempts', [...attempts, attempt]);
-}
-
 export function saveSession(session: PracticeSession): boolean {
   const sessions = readData('sessions').value.filter((saved) => saved.id !== session.id);
-  return writeData('sessions', [...sessions, session]);
+  return writeData('sessions', [...sessions, session].slice(-SESSION_HISTORY_LIMIT));
 }
 
 export function loadRecentSessions(limit = RECENT_SESSION_LIMIT): PracticeSession[] {

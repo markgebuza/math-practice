@@ -9,14 +9,15 @@ import {
   readData,
   runMigrations,
   saveActiveSession,
-  saveAttempt,
   saveSession,
   SCHEMA_VERSION,
+  SESSION_HISTORY_LIMIT,
   STORAGE_KEYS,
   writeData,
   type DataKey,
   type StoredData,
 } from './storageService';
+import { ATTEMPT_HISTORY_LIMIT, recordAttempt } from './statisticsService';
 
 function makeAttempt(overrides: Partial<PracticeAttempt> = {}): PracticeAttempt {
   return {
@@ -107,6 +108,15 @@ const VALID_DATA: StoredData = {
       multiplication: { attempted: 1, correct: 0, incorrect: 1 },
     },
   },
+  archivedStatistics: {
+    ...createEmptyStatistics(),
+    attempted: 2,
+    correct: 2,
+    byOperation: {
+      ...createEmptyStatistics().byOperation,
+      addition: { attempted: 2, correct: 2, incorrect: 0 },
+    },
+  },
 };
 
 const DATA_KEYS = Object.keys(VALID_DATA) as DataKey[];
@@ -126,9 +136,12 @@ describe('storageService', () => {
     it.each(DATA_KEYS)('returns defaults for %s', (key) => {
       const { value, status } = readData(key);
       expect(status).toBe('missing');
-      expect(value).toEqual(
-        key === 'settings' ? DEFAULT_SETTINGS : key === 'statistics' ? createEmptyStatistics() : [],
-      );
+      const defaults: Partial<StoredData> = {
+        settings: DEFAULT_SETTINGS,
+        statistics: createEmptyStatistics(),
+        archivedStatistics: createEmptyStatistics(),
+      };
+      expect(value).toEqual(defaults[key] ?? []);
     });
 
     it('has no recent sessions', () => {
@@ -277,7 +290,6 @@ describe('storageService', () => {
         throw new DOMException('Quota exceeded', 'QuotaExceededError');
       });
       expect(writeData('attempts', [makeAttempt()])).toBe(false);
-      expect(saveAttempt(makeAttempt())).toBe(false);
       expect(saveSession(makeSession())).toBe(false);
       expect(initializeStorage()).toBe(false);
     });
@@ -361,13 +373,6 @@ describe('storageService', () => {
   });
 
   describe('attempts and sessions', () => {
-    it('appends attempts and never saves the same question twice', () => {
-      expect(saveAttempt(makeAttempt())).toBe(true);
-      expect(saveAttempt(makeAttempt({ id: 'attempt-2' }))).toBe(true);
-      expect(saveAttempt(makeAttempt({ id: 'attempt-3', questionId: 'question-2' }))).toBe(true);
-      expect(readData('attempts').value.map((a) => a.id)).toEqual(['attempt-1', 'attempt-3']);
-    });
-
     it('updates a saved session in place', () => {
       saveSession(makeSession({ completedAt: undefined, attempted: 1, correct: 1, incorrect: 0 }));
       saveSession(makeSession({ id: 'session-2' }));
@@ -396,6 +401,23 @@ describe('storageService', () => {
         'session-24',
         'session-23',
       ]);
+    });
+
+    it(`keeps only the newest ${SESSION_HISTORY_LIMIT} sessions`, () => {
+      for (let n = 1; n <= SESSION_HISTORY_LIMIT + 10; n++) {
+        saveSession(
+          makeSession({
+            id: `session-${n}`,
+            completedAt: new Date(Date.UTC(2026, 0, n)).toISOString(),
+          }),
+        );
+      }
+      const sessions = readData('sessions').value;
+      expect(sessions).toHaveLength(SESSION_HISTORY_LIMIT);
+      expect(sessions[0].id).toBe('session-11');
+      expect(loadRecentSessions().map((s) => s.id)).toEqual(
+        Array.from({ length: 20 }, (_, i) => `session-${SESSION_HISTORY_LIMIT + 10 - i}`),
+      );
     });
   });
 
@@ -456,9 +478,22 @@ describe('storageService', () => {
 
     it('drops a session whose current question was already answered and saved', () => {
       saveActiveSession(makeActiveSession());
-      saveAttempt(makeAttempt({ id: 'attempt-2', questionId: 'question-2' }));
+      writeData('attempts', [makeAttempt({ id: 'attempt-2', questionId: 'question-2' })]);
       expect(loadActiveSession()).toBeNull();
       expect(storedActive()).toBeNull();
+    });
+
+    it('still drops an answered session after old attempts were summarized', () => {
+      writeData(
+        'attempts',
+        Array.from({ length: ATTEMPT_HISTORY_LIMIT }, (_, i) =>
+          makeAttempt({ id: `old-${i}`, questionId: `old-question-${i}` }),
+        ),
+      );
+      saveActiveSession(makeActiveSession());
+      recordAttempt(makeAttempt({ id: 'attempt-2', questionId: 'question-2' }));
+      expect(readData('attempts').value).toHaveLength(ATTEMPT_HISTORY_LIMIT);
+      expect(loadActiveSession()).toBeNull();
     });
 
     it('removes the old copy when saving fails, so it is never restored', () => {

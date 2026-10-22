@@ -1,3 +1,13 @@
+/* Only the Latin subset of Nunito: the app's text, digits and math symbols are all in it. */
+@font-face {
+  font-family: 'Nunito Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 1000;
+  src: url('@fontsource-variable/nunito/files/nunito-latin-wght-normal.woff2')
+    format('woff2-variations');
+}
+
 :root {
   --color-bg: #fff8e7;
   --color-surface: #ffffff;
