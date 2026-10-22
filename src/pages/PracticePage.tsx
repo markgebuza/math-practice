@@ -21,6 +21,7 @@ export function PracticePage() {
     currentQuestionIndex,
     attempts,
     isActive,
+    reviewQueue,
     recordResult,
     endSession,
   } = usePracticeSession();
@@ -52,10 +53,16 @@ export function PracticePage() {
     <PageContainer title="Practice">
       <div className="practice-page">
         <ul className="practice-page__choices" aria-label="Your choices">
-          <li>Math: {session.operations.map((op) => OPERATION_LABELS[op]).join(', ')}</li>
-          <li>
-            Level: Level {session.difficulty}: {DIFFICULTY_NAMES[session.difficulty]}
-          </li>
+          {reviewQueue ? (
+            <li>Practicing: My mistakes</li>
+          ) : (
+            <>
+              <li>Math: {session.operations.map((op) => OPERATION_LABELS[op]).join(', ')}</li>
+              <li>
+                Level: Level {session.difficulty}: {DIFFICULTY_NAMES[session.difficulty]}
+              </li>
+            </>
+          )}
           <li>Questions: {totalQuestions ? `${totalQuestions} questions` : 'Keep going'}</li>
         </ul>
         {totalQuestions ? (

@@ -6,9 +6,10 @@ import './SessionSummary.css';
 interface SessionSummaryProps {
   session: PracticeSession;
   reviewCount: number;
+  isReview?: boolean;
 }
 
-export function SessionSummary({ session, reviewCount }: SessionSummaryProps) {
+export function SessionSummary({ session, reviewCount, isReview = false }: SessionSummaryProps) {
   const accuracy = calculateAccuracy(session.correct, session.attempted);
   const stats = [
     { label: 'Attempted', value: session.attempted },
@@ -31,6 +32,12 @@ export function SessionSummary({ session, reviewCount }: SessionSummaryProps) {
         ))}
       </dl>
       <dl className="session-summary__details">
+        {isReview && (
+          <div>
+            <dt>Practice</dt>
+            <dd>My mistakes</dd>
+          </div>
+        )}
         <div>
           <dt>Math practiced</dt>
           <dd>{session.operations.map((op) => OPERATION_LABELS[op]).join(', ')}</dd>
@@ -38,7 +45,7 @@ export function SessionSummary({ session, reviewCount }: SessionSummaryProps) {
         <div>
           <dt>Level</dt>
           <dd>
-            Level {session.difficulty}: {DIFFICULTY_NAMES[session.difficulty]}
+            {isReview && 'Up to '}Level {session.difficulty}: {DIFFICULTY_NAMES[session.difficulty]}
           </dd>
         </div>
         <div>

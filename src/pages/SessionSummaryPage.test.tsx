@@ -5,6 +5,7 @@ import { RouterProvider } from 'react-router/dom';
 import { AppProvider } from '../app/AppProvider';
 import { routes } from '../app/AppRoutes';
 import type { PracticeConfig } from '../app/practiceConfig';
+import { readData } from '../services/storageService';
 import { seedMathRandom } from '../test/seededRandom';
 
 function renderAt(path: string, initialPracticeConfig?: PracticeConfig) {
@@ -152,12 +153,42 @@ describe('SessionSummaryPage', () => {
     );
   });
 
-  it('keeps Practice Mistakes disabled and explains why', async () => {
-    await finishFiveQuestions();
+  it('enables Practice Mistakes after a wrong answer and starts a review session', async () => {
+    const router = await finishFiveQuestions();
+    const button = screen.getByRole('button', { name: 'Practice Mistakes' });
+    expect(button).toBeEnabled();
+    expect(button).not.toHaveAccessibleDescription();
+    await userEvent.click(button);
+    expect(await screen.findByText('Practicing: My mistakes')).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/practice/session');
+    expect(screen.getByText('Question 1 of 5')).toBeInTheDocument();
+  });
+
+  it('keeps Practice Mistakes disabled and explains why when nothing was missed', async () => {
+    await startSession(fiveSubtraction);
+    for (let i = 0; i < 5; i++) {
+      await answer('I Got It Right');
+    }
+    await screen.findByRole('heading', { level: 1, name: 'Session Summary' });
     const button = screen.getByRole('button', { name: 'Practice Mistakes' });
     expect(button).toBeDisabled();
-    expect(button).toHaveAccessibleDescription('Practicing your mistakes is coming soon!');
+    expect(button).toHaveAccessibleDescription('No mistakes to practice right now. Nice work!');
   });
+
+  it('Practice Again after a review session starts another review session', async () => {
+    await finishFiveQuestions();
+    await userEvent.click(screen.getByRole('button', { name: 'Practice Mistakes' }));
+    await screen.findByText('Practicing: My mistakes');
+    for (let i = 0; i < 5; i++) {
+      await answer('I Got It Wrong');
+    }
+    await screen.findByRole('heading', { level: 1, name: 'Session Summary' });
+    expect(stat('Practice')).toBe('My mistakes');
+    expect(stat('Mistake-review questions')).toBe('5');
+    expect(readData('mistakePatterns').value).toHaveLength(1);
+    await userEvent.click(screen.getByRole('button', { name: 'Practice Again' }));
+    expect(await screen.findByText('Practicing: My mistakes')).toBeInTheDocument();
+  }, 15000);
 
   it.each([
     ['Change Settings', '/practice/setup', 'Get Ready to Practice'],

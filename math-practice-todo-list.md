@@ -492,41 +492,41 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 
 ### 58. Add Review Mode to Setup
 
--   [ ] Add regular-practice and mistake-review options.
--   [ ] Disable review when no active mistakes exist.
--   [ ] Explain why review is unavailable.
--   [ ] Display active pattern count.
+-   [x] Add regular-practice and mistake-review options.
+-   [x] Disable review when no active mistakes exist.
+-   [x] Explain why review is unavailable.
+-   [x] Display active pattern count.
 
 ### 59. Prioritize Mistake Patterns
 
--   [ ] Prioritize frequently missed patterns.
--   [ ] Prioritize recently missed patterns.
--   [ ] Prioritize patterns with little successful review.
--   [ ] Randomize similarly ranked patterns.
--   [ ] Test prioritization.
+-   [x] Prioritize frequently missed patterns.
+-   [x] Prioritize recently missed patterns.
+-   [x] Prioritize patterns with little successful review.
+-   [x] Randomize similarly ranked patterns.
+-   [x] Test prioritization.
 
 ### 60. Build Review Sessions
 
--   [ ] Select active patterns.
--   [ ] Generate similar questions.
--   [ ] Mix multiple patterns in a session.
--   [ ] Track the source pattern for each question.
--   [ ] Include review counts in the summary.
+-   [x] Select active patterns.
+-   [x] Generate similar questions.
+-   [x] Mix multiple patterns in a session.
+-   [x] Track the source pattern for each question.
+-   [x] Include review counts in the summary.
 
 ### 61. Track Similar-Question Success
 
--   [ ] Increment similar-correct count after correct review answers.
--   [ ] Handle incorrect review answers.
--   [ ] Update the original pattern.
--   [ ] Persist the update.
+-   [x] Increment similar-correct count after correct review answers.
+-   [x] Handle incorrect review answers.
+-   [x] Update the original pattern.
+-   [x] Persist the update.
 
 ### 62. Implement Mastery Rules
 
--   [ ] Mark a pattern mastered after three correct similar questions.
--   [ ] Make the threshold configurable.
--   [ ] Exclude mastered patterns from normal review.
+-   [x] Mark a pattern mastered after three correct similar questions.
+-   [x] Make the threshold configurable.
+-   [x] Exclude mastered patterns from normal review.
 -   [x] Allow a later mistake to reactivate a pattern.
--   [ ] Test mastery transitions.
+-   [x] Test mastery transitions.
 
 ## Phase 15: Advanced Statistics
 
@@ -669,7 +669,7 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 -   [ ] Test distractors and choice uniqueness.
 -   [x] Test similar-question generation.
 -   [x] Test statistics calculations.
--   [ ] Test mastery rules.
+-   [x] Test mastery rules.
 -   [ ] Test storage serialization and validation.
 
 ### 80. Complete Component Tests
@@ -687,8 +687,8 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 -   [ ] Test a mixed-operation session.
 -   [ ] Test continuous practice.
 -   [x] Test an incorrect answer creating a pattern.
--   [ ] Test mistake-review generation.
--   [ ] Test mastery completion.
+-   [x] Test mistake-review generation.
+-   [x] Test mastery completion.
 -   [ ] Test persistence after refresh.
 -   [x] Test resetting statistics.
 

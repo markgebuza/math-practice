@@ -5,6 +5,8 @@ import { RouterProvider } from 'react-router/dom';
 import { AppProvider } from '../app/AppProvider';
 import { routes } from '../app/AppRoutes';
 import type { PracticeConfig } from '../app/practiceConfig';
+import { writeData } from '../services/storageService';
+import type { MistakePattern } from '../types';
 
 function renderSetup(initialPracticeConfig?: PracticeConfig) {
   const router = createMemoryRouter(routes, { initialEntries: ['/practice/setup'] });
@@ -133,5 +135,79 @@ describe('PracticeSetupPage', () => {
     await router.navigate('/');
     await router.navigate('/practice/setup');
     expect(await screen.findByRole('checkbox', { name: 'Subtraction' })).toBeChecked();
+  });
+
+  describe('mode', () => {
+    function makePattern(id: string, overrides: Partial<MistakePattern> = {}): MistakePattern {
+      return {
+        id,
+        operation: 'multiplication',
+        firstOperand: 8,
+        secondOperand: 7,
+        correctAnswer: 56,
+        difficulty: 2,
+        incorrectCount: 1,
+        similarCorrectCount: 0,
+        lastIncorrectAt: '2026-10-21T10:00:00.000Z',
+        mastered: false,
+        ...overrides,
+      };
+    }
+
+    const reviewRadio = () => screen.getByRole('radio', { name: /Practice my mistakes/ });
+
+    it('starts in regular practice with review unavailable and explained when nothing was missed', async () => {
+      renderSetup();
+      await screen.findByRole('heading', { name: 'Get Ready to Practice' });
+      expect(screen.getByRole('radio', { name: /Regular practice/ })).toBeChecked();
+      expect(reviewRadio()).toBeDisabled();
+      expect(reviewRadio()).toHaveAccessibleName(/Nothing to practice yet/);
+      expect(
+        screen.getByText('Practice my mistakes opens up after you mark a card I Got It Wrong.'),
+      ).toBeInTheDocument();
+    });
+
+    it('shows the number of active patterns, leaving out mastered ones', async () => {
+      writeData('mistakePatterns', [
+        makePattern('a'),
+        makePattern('b', { operation: 'addition', correctAnswer: 15 }),
+        makePattern('c', { operation: 'division', similarCorrectCount: 3, mastered: true }),
+      ]);
+      renderSetup();
+      await screen.findByRole('heading', { name: 'Get Ready to Practice' });
+      expect(reviewRadio()).toBeEnabled();
+      expect(reviewRadio()).toHaveAccessibleName(/2 facts to practice/);
+    });
+
+    it('disables the math and level choices in review mode and starts a review session', async () => {
+      writeData('mistakePatterns', [makePattern('a')]);
+      const router = renderSetup({ operations: [], difficulty: null, sessionLength: 5 });
+      await screen.findByRole('heading', { name: 'Get Ready to Practice' });
+      expect(reviewRadio()).toHaveAccessibleName(/1 fact to practice/);
+      expect(startButton()).toBeDisabled();
+      await userEvent.click(reviewRadio());
+      expect(operationGroup()).toBeDisabled();
+      expect(screen.getByRole('group', { name: 'How hard should it be?' })).toBeDisabled();
+      expect(
+        screen.getAllByText(
+          'Mistake practice picks the math and level for you, from the cards you marked wrong.',
+        ),
+      ).toHaveLength(2);
+      expect(startButton()).toBeEnabled();
+      await userEvent.click(startButton());
+      expect(router.state.location.pathname).toBe('/practice/session');
+      const choices = await screen.findByRole('list', { name: 'Your choices' });
+      expect(choices).toHaveTextContent('Practicing: My mistakes');
+      expect(choices).toHaveTextContent('Questions: 5 questions');
+    });
+
+    it('re-enables the math and level choices when switching back to regular practice', async () => {
+      writeData('mistakePatterns', [makePattern('a')]);
+      renderSetup();
+      await userEvent.click(await screen.findByRole('radio', { name: /Practice my mistakes/ }));
+      await userEvent.click(screen.getByRole('radio', { name: /Regular practice/ }));
+      expect(operationGroup()).toBeEnabled();
+      expect(screen.getByText('Pick one or more.')).toBeInTheDocument();
+    });
   });
 });

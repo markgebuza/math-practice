@@ -28,6 +28,14 @@ describe('SessionSummary', () => {
     expect(stat('Math practiced')).toBe('Addition, Subtraction, Multiplication, Division');
     expect(stat('Level')).toBe('Level 4: Advanced');
     expect(stat('Mistake-review questions')).toBe('3');
+    expect(screen.queryByText('Practice', { selector: 'dt' })).not.toBeInTheDocument();
+  });
+
+  it('labels a mistake-review session', () => {
+    render(<SessionSummary session={session} reviewCount={10} isReview />);
+    expect(stat('Practice')).toBe('My mistakes');
+    expect(stat('Level')).toBe('Up to Level 4: Advanced');
+    expect(stat('Mistake-review questions')).toBe('10');
   });
 
   it('stays encouraging when every answer was wrong', () => {

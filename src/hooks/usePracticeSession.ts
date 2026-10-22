@@ -3,16 +3,38 @@ import { isConfigReady, type PracticeConfig } from '../app/practiceConfig';
 import { PracticeSessionContext, practiceSessionReducer } from '../app/practiceSession';
 import { useStorage } from '../app/storageContext';
 import type { QuestionCardResult } from '../components/practice/QuestionCard';
-import { recordMistake } from '../services/mistakeService';
+import {
+  activePatterns,
+  applyReviewAnswer,
+  loadMistakePatterns,
+  nextReviewPattern,
+  rankPatterns,
+  recordMistake,
+  saveMistakePatterns,
+} from '../services/mistakeService';
 import { generateNextQuestion } from '../services/questionGenerator';
+import { generateSimilarQuestion } from '../services/similarQuestionGenerator';
 import { playSound } from '../services/soundService';
 import { recordAttempt } from '../services/statisticsService';
 import { saveSession } from '../services/storageService';
-import type { PracticeAttempt } from '../types';
+import type {
+  DifficultyLevel,
+  MistakePattern,
+  PracticeAttempt,
+  Question,
+  SessionLength,
+} from '../types';
 import { createId } from '../utils/ids';
+import { OPERATIONS } from '../utils/labels';
 
 // Seconds; lets the answer sound finish before the session-complete tune.
 const COMPLETE_SOUND_DELAY = 0.35;
+
+// DECISIONS 2.4: never the same review question twice in a row.
+function nextReviewQuestion(queue: string[], patterns: MistakePattern[], previous: Question) {
+  const pattern = nextReviewPattern(queue, patterns, previous.mistakePatternId ?? null);
+  return pattern ? generateSimilarQuestion(pattern, previous) : null;
+}
 
 // Questions are generated here, in event handlers, so the reducer stays pure and render never generates.
 export function usePracticeSession() {
@@ -44,8 +66,32 @@ export function usePracticeSession() {
     return true;
   }
 
+  // Each question uses its pattern's level; the session records the highest level reviewed.
+  function startReviewSession(sessionLength: SessionLength) {
+    const queue = rankPatterns(activePatterns(loadMistakePatterns(settings.masteryThreshold)));
+    if (queue.length === 0) {
+      return false;
+    }
+    dispatch({
+      type: 'startSession',
+      session: {
+        id: createId(),
+        startedAt: new Date().toISOString(),
+        operations: OPERATIONS.filter((op) => queue.some((p) => p.operation === op)),
+        difficulty: Math.max(...queue.map((p) => p.difficulty)) as DifficultyLevel,
+        sessionLength,
+        attempted: 0,
+        correct: 0,
+        incorrect: 0,
+      },
+      firstQuestion: generateSimilarQuestion(queue[0]),
+      reviewQueue: queue.map((p) => p.id),
+    });
+    return true;
+  }
+
   function recordResult({ selectedAnswer, selfReportedCorrect }: QuestionCardResult) {
-    const { currentSession: session, currentQuestion: question, isActive } = state;
+    const { currentSession: session, currentQuestion: question, isActive, reviewQueue } = state;
     if (!isActive || !session || !question) {
       return;
     }
@@ -63,11 +109,24 @@ export function usePracticeSession() {
       attemptedAt: new Date().toISOString(),
       sessionId: session.id,
     };
+    const reviewPatterns =
+      question.mistakePatternId === undefined
+        ? null
+        : applyReviewAnswer(
+            loadMistakePatterns(settings.masteryThreshold),
+            question.mistakePatternId,
+            selfReportedCorrect,
+            attempt.attemptedAt,
+            settings.masteryThreshold,
+          );
     const isLast =
       session.sessionLength !== 'continuous' && session.attempted + 1 >= session.sessionLength;
-    const nextQuestion = isLast
-      ? null
-      : generateNextQuestion(session.operations, session.difficulty, question);
+    let nextQuestion: Question | null = null;
+    if (!isLast) {
+      nextQuestion = reviewQueue
+        ? nextReviewQuestion(reviewQueue, reviewPatterns ?? loadMistakePatterns(), question)
+        : generateNextQuestion(session.operations, session.difficulty, question);
+    }
     const action = { type: 'recordAttempt', attempt, nextQuestion } as const;
     const next = practiceSessionReducer(state, action);
     if (next === state || !next.currentSession) {
@@ -83,7 +142,7 @@ export function usePracticeSession() {
     // Saved right away, so an answer is kept even if the session is never finished.
     const saved = [
       recordAttempt(attempt),
-      recordMistake(attempt),
+      reviewPatterns ? saveMistakePatterns(reviewPatterns) : recordMistake(attempt),
       saveSession(next.currentSession),
     ];
     reportSave(saved.every(Boolean));
@@ -102,5 +161,5 @@ export function usePracticeSession() {
     }
   }
 
-  return { ...state, startSession, recordResult, endSession };
+  return { ...state, startSession, startReviewSession, recordResult, endSession };
 }

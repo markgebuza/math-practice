@@ -1,10 +1,14 @@
+import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
-import { isConfigReady, usePracticeConfig } from '../app/practiceConfig';
+import { isConfigReady, usePracticeConfig, type PracticeMode } from '../app/practiceConfig';
+import { useStorage } from '../app/storageContext';
 import { usePracticeSession } from '../hooks/usePracticeSession';
+import { activePatterns, loadMistakePatterns } from '../services/mistakeService';
 import type { PracticeRedirectState } from './PracticePage';
 import { Button } from '../components/common/Button';
 import { PageContainer } from '../components/layout/PageContainer';
 import { DifficultySelector } from '../components/setup/DifficultySelector';
+import { ModeSelector } from '../components/setup/ModeSelector';
 import { OperationSelector } from '../components/setup/OperationSelector';
 import { SessionLengthSelector } from '../components/setup/SessionLengthSelector';
 import './PracticeSetupPage.css';
@@ -24,11 +28,19 @@ function missingChoiceMessage(hasOperation: boolean, hasDifficulty: boolean) {
 
 export function PracticeSetupPage() {
   const { config } = usePracticeConfig();
-  const { startSession } = usePracticeSession();
+  const { settings } = useStorage();
+  const { startSession, startReviewSession } = usePracticeSession();
   const navigate = useNavigate();
   const redirectState = useLocation().state as PracticeRedirectState | null;
-  const ready = isConfigReady(config);
-  const message = missingChoiceMessage(config.operations.length > 0, config.difficulty !== null);
+  const [activePatternCount] = useState(
+    () => activePatterns(loadMistakePatterns(settings.masteryThreshold)).length,
+  );
+  const [mode, setMode] = useState<PracticeMode>('regular');
+  const reviewing = mode === 'mistake-review';
+  const ready = reviewing ? activePatternCount > 0 : isConfigReady(config);
+  const message = reviewing
+    ? ''
+    : missingChoiceMessage(config.operations.length > 0, config.difficulty !== null);
 
   return (
     <PageContainer title="Get Ready to Practice">
@@ -41,13 +53,17 @@ export function PracticeSetupPage() {
         className="setup"
         onSubmit={(event) => {
           event.preventDefault();
-          if (startSession(config)) {
+          const started = reviewing
+            ? startReviewSession(config.sessionLength)
+            : startSession(config);
+          if (started) {
             navigate('/practice/session');
           }
         }}
       >
-        <OperationSelector />
-        <DifficultySelector />
+        <ModeSelector mode={mode} activePatternCount={activePatternCount} onChange={setMode} />
+        <OperationSelector disabled={reviewing} />
+        <DifficultySelector disabled={reviewing} />
         <SessionLengthSelector />
         <div className="setup__start">
           <p id="setup-status" className="setup__message" role="status">

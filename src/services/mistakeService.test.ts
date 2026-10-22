@@ -1,5 +1,14 @@
 import type { MistakePattern, PracticeAttempt } from '../types';
-import { addMistake, loadMistakePatterns, recordMistake } from './mistakeService';
+import {
+  activePatterns,
+  addMistake,
+  applyMasteryThreshold,
+  applyReviewAnswer,
+  loadMistakePatterns,
+  nextReviewPattern,
+  rankPatterns,
+  recordMistake,
+} from './mistakeService';
 import { readData, STORAGE_KEYS, writeData } from './storageService';
 
 let nextId = 1;
@@ -200,5 +209,173 @@ describe('recordMistake', () => {
     });
     expect(recordMistake(makeAttempt())).toBe(false);
     vi.restoreAllMocks();
+  });
+});
+
+const NOW = Date.parse('2026-10-21T12:00:00.000Z');
+const DAYS_AGO = (days: number) => new Date(NOW - days * 24 * 60 * 60 * 1000).toISOString();
+
+describe('mastery threshold', () => {
+  it('masters patterns already at or above a lowered threshold', () => {
+    const patterns = [
+      makePattern({ id: 'a', similarCorrectCount: 2 }),
+      makePattern({ id: 'b', similarCorrectCount: 1 }),
+    ];
+    expect(applyMasteryThreshold(patterns, 2).map((p) => p.mastered)).toEqual([true, false]);
+  });
+
+  it('does not un-master patterns when the threshold is raised', () => {
+    const mastered = makePattern({ similarCorrectCount: 3, mastered: true });
+    expect(applyMasteryThreshold([mastered], 5)).toEqual([mastered]);
+  });
+
+  it('applies the threshold when patterns load', () => {
+    writeData('mistakePatterns', [makePattern({ similarCorrectCount: 2 })]);
+    expect(loadMistakePatterns()[0].mastered).toBe(false);
+    expect(loadMistakePatterns(2)[0].mastered).toBe(true);
+    expect(activePatterns(loadMistakePatterns(2))).toEqual([]);
+  });
+});
+
+describe('rankPatterns', () => {
+  const fixedRandom = () => 0.5;
+  const ids = (patterns: MistakePattern[]) => patterns.map((p) => p.id);
+
+  it('puts frequently missed patterns first', () => {
+    const once = makePattern({ id: 'once', incorrectCount: 1, lastIncorrectAt: DAYS_AGO(30) });
+    const often = makePattern({ id: 'often', incorrectCount: 4, lastIncorrectAt: DAYS_AGO(30) });
+    expect(ids(rankPatterns([once, often], NOW, fixedRandom))).toEqual(['often', 'once']);
+  });
+
+  it('puts recently missed patterns first', () => {
+    const old = makePattern({ id: 'old', lastIncorrectAt: DAYS_AGO(30) });
+    const week = makePattern({ id: 'week', lastIncorrectAt: DAYS_AGO(3) });
+    const today = makePattern({ id: 'today', lastIncorrectAt: DAYS_AGO(0.1) });
+    expect(ids(rankPatterns([old, week, today], NOW, fixedRandom))).toEqual([
+      'today',
+      'week',
+      'old',
+    ]);
+  });
+
+  it('puts patterns with little successful review first', () => {
+    const reviewed = makePattern({ id: 'reviewed', similarCorrectCount: 2 });
+    const fresh = makePattern({ id: 'fresh', similarCorrectCount: 0 });
+    expect(ids(rankPatterns([reviewed, fresh], NOW, fixedRandom))).toEqual(['fresh', 'reviewed']);
+  });
+
+  it('weighs the three together', () => {
+    // Scores: 3 + 0 = 3, 1 + 2 = 3, 3 - 1 + 2 = 4.
+    const oldFrequent = makePattern({
+      id: 'old',
+      incorrectCount: 3,
+      lastIncorrectAt: DAYS_AGO(30),
+    });
+    const newOnce = makePattern({ id: 'new', incorrectCount: 1, lastIncorrectAt: DAYS_AGO(0) });
+    const top = makePattern({
+      id: 'top',
+      incorrectCount: 3,
+      similarCorrectCount: 1,
+      lastIncorrectAt: DAYS_AGO(0),
+    });
+    expect(rankPatterns([oldFrequent, newOnce, top], NOW, fixedRandom)[0].id).toBe('top');
+  });
+
+  it('shuffles equally ranked patterns with the given randomness', () => {
+    const a = makePattern({ id: 'a' });
+    const b = makePattern({ id: 'b' });
+    const values =
+      (...v: number[]) =>
+      () =>
+        v.shift()!;
+    expect(ids(rankPatterns([a, b], NOW, values(0.2, 0.8)))).toEqual(['a', 'b']);
+    expect(ids(rankPatterns([a, b], NOW, values(0.8, 0.2)))).toEqual(['b', 'a']);
+  });
+
+  it('never lets randomness move a pattern past a higher-ranked one', () => {
+    const high = makePattern({ id: 'high', incorrectCount: 3 });
+    const low = makePattern({ id: 'low', incorrectCount: 1 });
+    const values =
+      (...v: number[]) =>
+      () =>
+        v.shift()!;
+    expect(ids(rankPatterns([low, high], NOW, values(0, 0.99)))).toEqual(['high', 'low']);
+  });
+
+  it('leaves the input unchanged', () => {
+    const patterns = [makePattern({ id: 'a' }), makePattern({ id: 'b', incorrectCount: 5 })];
+    rankPatterns(patterns, NOW, fixedRandom);
+    expect(ids(patterns)).toEqual(['a', 'b']);
+  });
+});
+
+describe('nextReviewPattern', () => {
+  const a = makePattern({ id: 'a' });
+  const b = makePattern({ id: 'b' });
+  const c = makePattern({ id: 'c' });
+  const queue = ['a', 'b', 'c'];
+
+  it('starts with the first pattern and repeats the queue in order', () => {
+    const order: (string | undefined)[] = [];
+    let current: string | null = null;
+    for (let i = 0; i < 5; i++) {
+      current = nextReviewPattern(queue, [a, b, c], current)?.id ?? null;
+      order.push(current ?? undefined);
+    }
+    expect(order).toEqual(['a', 'b', 'c', 'a', 'b']);
+  });
+
+  it('skips mastered patterns', () => {
+    const masteredB = { ...b, mastered: true };
+    expect(nextReviewPattern(queue, [a, masteredB, c], 'a')?.id).toBe('c');
+    expect(nextReviewPattern(queue, [a, masteredB, c], 'c')?.id).toBe('a');
+  });
+
+  it('returns null when every pattern is mastered or gone', () => {
+    expect(nextReviewPattern(queue, [{ ...a, mastered: true }], 'a')).toBeNull();
+  });
+});
+
+describe('applyReviewAnswer', () => {
+  const at = '2026-10-22T09:00:00.000Z';
+
+  it('counts a correct review answer toward mastery', () => {
+    const [updated] = applyReviewAnswer([makePattern()], 'pattern-1', true, at, 3);
+    expect(updated).toMatchObject({ similarCorrectCount: 1, mastered: false, incorrectCount: 1 });
+    expect(updated.lastIncorrectAt).toBe(makePattern().lastIncorrectAt);
+  });
+
+  it('masters the pattern when the threshold is reached', () => {
+    let patterns = [makePattern()];
+    for (let i = 0; i < 3; i++) {
+      patterns = applyReviewAnswer(patterns, 'pattern-1', true, at, 3);
+    }
+    expect(patterns[0]).toMatchObject({ similarCorrectCount: 3, mastered: true });
+    expect(activePatterns(patterns)).toEqual([]);
+  });
+
+  it('uses the threshold it is given', () => {
+    const [updated] = applyReviewAnswer([makePattern()], 'pattern-1', true, at, 1);
+    expect(updated.mastered).toBe(true);
+  });
+
+  it('updates the source pattern on a wrong review answer (DECISIONS 2.2)', () => {
+    const pattern = makePattern({ incorrectCount: 2, similarCorrectCount: 2 });
+    expect(applyReviewAnswer([pattern], 'pattern-1', false, at, 3)).toEqual([
+      {
+        ...pattern,
+        incorrectCount: 3,
+        similarCorrectCount: 0,
+        lastIncorrectAt: at,
+        mastered: false,
+      },
+    ]);
+  });
+
+  it('leaves other patterns alone and ignores a pattern that no longer exists', () => {
+    const other = makePattern({ id: 'other' });
+    const patterns = applyReviewAnswer([makePattern(), other], 'pattern-1', false, at, 3);
+    expect(patterns[1]).toBe(other);
+    expect(applyReviewAnswer([other], 'gone', false, at, 3)).toEqual([other]);
   });
 });

@@ -49,3 +49,6 @@ export const DIFFICULTY_DESCRIPTIONS: Record<DifficultyLevel, string> = {
 export function sessionLengthLabel(length: SessionLength) {
   return length === 'continuous' ? 'Keep going' : `${length} questions`;
 }
+
+export const REVIEW_SETUP_HINT =
+  'Mistake practice picks the math and level for you, from the cards you marked wrong.';

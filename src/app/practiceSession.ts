@@ -7,10 +7,17 @@ export interface PracticeSessionState {
   currentQuestionIndex: number;
   attempts: PracticeAttempt[];
   isActive: boolean;
+  // Pattern ids in priority order for a mistake-review session; null for regular practice.
+  reviewQueue: string[] | null;
 }
 
 export type PracticeSessionAction =
-  | { type: 'startSession'; session: PracticeSession; firstQuestion: Question }
+  | {
+      type: 'startSession';
+      session: PracticeSession;
+      firstQuestion: Question;
+      reviewQueue?: string[];
+    }
   | { type: 'recordAttempt'; attempt: PracticeAttempt; nextQuestion: Question | null }
   | { type: 'endSession'; completedAt: string }
   | { type: 'reset' };
@@ -21,6 +28,7 @@ export const INITIAL_SESSION_STATE: PracticeSessionState = {
   currentQuestionIndex: 0,
   attempts: [],
   isActive: false,
+  reviewQueue: null,
 };
 
 export function practiceSessionReducer(
@@ -35,6 +43,7 @@ export function practiceSessionReducer(
         currentQuestionIndex: 0,
         attempts: [],
         isActive: true,
+        reviewQueue: action.reviewQueue ?? null,
       };
     case 'recordAttempt': {
       const { attempt, nextQuestion } = action;
@@ -53,6 +62,7 @@ export function practiceSessionReducer(
         nextQuestion === null ||
         (session.sessionLength !== 'continuous' && attempted >= session.sessionLength);
       return {
+        ...state,
         currentSession: {
           ...session,
           attempted,

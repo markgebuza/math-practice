@@ -3,6 +3,8 @@ import type { AppSettings, DifficultyLevel, MathOperation, SessionLength } from 
 import { DEFAULT_SETTINGS } from '../types';
 import { OPERATIONS } from '../utils/labels';
 
+export type PracticeMode = 'regular' | 'mistake-review';
+
 export interface PracticeConfig {
   operations: MathOperation[];
   difficulty: DifficultyLevel | null;
