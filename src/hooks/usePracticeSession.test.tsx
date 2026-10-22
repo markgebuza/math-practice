@@ -1,6 +1,8 @@
 import { act, renderHook } from '@testing-library/react';
 import { AppProvider } from '../app/AppProvider';
 import { generateNextQuestion } from '../services/questionGenerator';
+import { readData, writeData } from '../services/storageService';
+import type { MistakePattern, Question } from '../types';
 import { usePracticeSession } from './usePracticeSession';
 
 vi.mock('../services/questionGenerator', async (importOriginal) => {
@@ -76,6 +78,105 @@ describe('usePracticeSession', () => {
     ]);
     expect(result.current.currentSession).toMatchObject({ attempted: 1, correct: 0, incorrect: 1 });
     expect(result.current.currentQuestion?.id).not.toBe(question.id);
+  });
+
+  describe('mistake patterns', () => {
+    function factQuestion(firstOperand: number, secondOperand: number): Question {
+      return {
+        id: `question-${firstOperand}-${secondOperand}`,
+        operation: 'multiplication',
+        firstOperand,
+        secondOperand,
+        displayText: `${firstOperand} × ${secondOperand}`,
+        correctAnswer: 56,
+        choices: [54, 56, 63, 48],
+        difficulty: 2,
+        source: 'regular',
+      };
+    }
+
+    function startWith(...questions: Question[]) {
+      for (const question of questions) {
+        vi.mocked(generateNextQuestion).mockReturnValueOnce(question);
+      }
+      const view = renderSession();
+      act(() => {
+        view.result.current.startSession({
+          operations: ['multiplication'],
+          difficulty: 2,
+          sessionLength: 5,
+        });
+      });
+      return view;
+    }
+
+    function report(result: { current: ReturnType<typeof usePracticeSession> }, correct: boolean) {
+      act(() => {
+        result.current.recordResult({ selectedAnswer: 54, selfReportedCorrect: correct });
+      });
+    }
+
+    it('saves a pattern as soon as I Got It Wrong is reported', () => {
+      const { result } = startWith(factQuestion(7, 8), factQuestion(3, 4));
+      report(result, false);
+      expect(readData('mistakePatterns').value).toEqual([
+        expect.objectContaining({
+          operation: 'multiplication',
+          firstOperand: 7,
+          secondOperand: 8,
+          correctAnswer: 56,
+          difficulty: 2,
+          incorrectCount: 1,
+          similarCorrectCount: 0,
+          lastIncorrectAt: result.current.attempts[0].attemptedAt,
+          mastered: false,
+        }),
+      ]);
+      expect(result.current.isActive).toBe(true);
+    });
+
+    it('updates the same pattern for a repeated mistake, including a swapped fact', () => {
+      const { result } = startWith(factQuestion(7, 8), factQuestion(8, 7), factQuestion(3, 4));
+      report(result, false);
+      report(result, false);
+      const patterns = readData('mistakePatterns').value;
+      expect(patterns).toHaveLength(1);
+      expect(patterns[0]).toMatchObject({ firstOperand: 7, secondOperand: 8, incorrectCount: 2 });
+    });
+
+    it('creates nothing for I Got It Right', () => {
+      const { result } = startWith(factQuestion(7, 8), factQuestion(3, 4));
+      report(result, true);
+      expect(readData('mistakePatterns').value).toEqual([]);
+    });
+
+    it('builds on the patterns saved before the app started', () => {
+      const saved: MistakePattern = {
+        id: 'saved',
+        operation: 'multiplication',
+        firstOperand: 8,
+        secondOperand: 7,
+        correctAnswer: 56,
+        difficulty: 1,
+        incorrectCount: 3,
+        similarCorrectCount: 3,
+        lastIncorrectAt: '2026-10-20T10:00:00.000Z',
+        mastered: true,
+      };
+      writeData('mistakePatterns', [saved]);
+      const { result } = startWith(factQuestion(7, 8), factQuestion(3, 4));
+      report(result, false);
+      expect(readData('mistakePatterns').value).toEqual([
+        {
+          ...saved,
+          difficulty: 2,
+          incorrectCount: 4,
+          similarCorrectCount: 0,
+          lastIncorrectAt: result.current.attempts[0].attemptedAt,
+          mastered: false,
+        },
+      ]);
+    });
   });
 
   it('stops generating questions once a fixed-length session is complete', () => {

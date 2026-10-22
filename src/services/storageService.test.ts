@@ -152,6 +152,28 @@ describe('storageService', () => {
     expect(readData('sessions').value.map((s) => s.id)).toEqual(['session-1']);
   });
 
+  it('drops invalid mistake patterns and keeps the valid ones', () => {
+    const [good] = VALID_DATA.mistakePatterns;
+    localStorage.setItem(
+      STORAGE_KEYS.mistakePatterns,
+      JSON.stringify([
+        good,
+        { ...good, id: '' },
+        { ...good, id: 'bad-operation', operation: 'modulo' },
+        { ...good, id: 'bad-difficulty', difficulty: 5 },
+        { ...good, id: 'fraction', firstOperand: 7.5 },
+        { ...good, id: 'negative-count', incorrectCount: -1 },
+        { ...good, id: 'bad-progress', similarCorrectCount: 'two' },
+        { ...good, id: 'bad-date', lastIncorrectAt: 'yesterday' },
+        { ...good, id: 'bad-mastered', mastered: 'no' },
+        { ...good, id: 'missing-answer', correctAnswer: undefined },
+        null,
+        [good],
+      ]),
+    );
+    expect(readData('mistakePatterns')).toEqual({ value: [good], status: 'ok' });
+  });
+
   it('resets statistics with a missing operation', () => {
     const byOperation: Partial<AppStatistics['byOperation']> = createEmptyStatistics().byOperation;
     delete byOperation.division;

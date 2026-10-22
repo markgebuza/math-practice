@@ -435,25 +435,25 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 
 ### 51. Create Mistake Patterns
 
--   [ ] Create a pattern after an incorrect answer.
--   [ ] Store operation, operands, answer, and difficulty.
--   [ ] Store last incorrect timestamp.
--   [ ] Initialize incorrect and similar-correct counts.
+-   [x] Create a pattern after an incorrect answer.
+-   [x] Store operation, operands, answer, and difficulty.
+-   [x] Store last incorrect timestamp.
+-   [x] Initialize incorrect and similar-correct counts.
 
 ### 52. Update Existing Patterns
 
--   [ ] Detect an existing matching pattern.
--   [ ] Increment incorrect count.
--   [ ] Update last-incorrect timestamp.
--   [ ] Adjust mastery progress as appropriate.
--   [ ] Avoid duplicate records.
+-   [x] Detect an existing matching pattern.
+-   [x] Increment incorrect count.
+-   [x] Update last-incorrect timestamp.
+-   [x] Adjust mastery progress as appropriate.
+-   [x] Avoid duplicate records.
 
 ### 53. Persist Mistake Patterns
 
--   [ ] Save patterns locally.
--   [ ] Load patterns at startup.
--   [ ] Validate stored patterns.
--   [ ] Recover from invalid records.
+-   [x] Save patterns locally.
+-   [x] Load patterns at startup.
+-   [x] Validate stored patterns.
+-   [x] Recover from invalid records.
 
 ## Phase 13: Similar Question Generation
 
@@ -525,7 +525,7 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 -   [ ] Mark a pattern mastered after three correct similar questions.
 -   [ ] Make the threshold configurable.
 -   [ ] Exclude mastered patterns from normal review.
--   [ ] Allow a later mistake to reactivate a pattern.
+-   [x] Allow a later mistake to reactivate a pattern.
 -   [ ] Test mastery transitions.
 
 ## Phase 15: Advanced Statistics
@@ -640,7 +640,7 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 
 ### 76. Handle Invalid Stored Data
 
--   [ ] Detect invalid settings, attempts, sessions, and patterns.
+-   [x] Detect invalid settings, attempts, sessions, and patterns.
 -   [ ] Reset only the affected data category.
 -   [ ] Avoid application crashes.
 
@@ -686,7 +686,7 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 -   [ ] Test a full addition session.
 -   [ ] Test a mixed-operation session.
 -   [ ] Test continuous practice.
--   [ ] Test an incorrect answer creating a pattern.
+-   [x] Test an incorrect answer creating a pattern.
 -   [ ] Test mistake-review generation.
 -   [ ] Test mastery completion.
 -   [ ] Test persistence after refresh.

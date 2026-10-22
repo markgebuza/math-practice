@@ -405,3 +405,33 @@ Clear All Application Data needs a clear warning, then returns home with default
 - `npm run lint`: pass, 0 errors. `npm test -- --run`: 29 files, 305/305 passed. `npm run build`: pass.
 - Manual: answer 3 questions with 2 marked right; the summary and Statistics show 66%, not 67%.
 **Problems / open issues:** None.
+
+### [2026-10-21 22:26] Phase 12: Mistake Tracking
+**My prompt:**
+Implement Phase 12 (tasks 51–53) following DECISIONS.md for when two mistakes count as
+the same pattern.
+
+Create or update the pattern at the moment I click I Got It Wrong, and save it to
+localStorage right away. Don't wait for the session to end. Test: a wrong answer creates
+a pattern, the same mistake again increments incorrectCount without duplicating, a
+correct answer creates nothing, and invalid stored patterns are dropped without crashing.
+
+**What you did:**
+- Run by a Claude Code subagent using the Phase 12 prompt from PROMPTS.md (not manually tested by me before commit).
+- Already there from Phase 9: the `MistakePattern` type, the `mathPractice.mistakePatterns` key with a validator that drops invalid records (keeps the valid ones; unreadable JSON resets only that key), Reset Statistics keeping patterns (DECISIONS 3.1) and Clear All removing them (both already tested; verified, not changed). Missing: creating/updating patterns.
+- New `src/services/mistakeService.ts`: pure `addMistake(patterns, mistake)` and `recordMistake(attempt)` / `loadMistakePatterns()`. Matching reuses `isSameQuestion` (same operation + operands; + and × also match swapped operands, − and ÷ don't; DECISIONS 2.1). A new pattern stores the operation, operands, correct answer, difficulty and `lastIncorrectAt` = the attempt time, with `incorrectCount` 1, `similarCorrectCount` 0, `mastered` false. A repeat mistake keeps the stored id/operands/answer (as first missed), sets `difficulty` to the latest level, `incorrectCount` + 1, updates `lastIncorrectAt`, resets `similarCorrectCount` to 0 and sets `mastered` to false (DECISIONS 2.2/2.3). Correct answers change nothing.
+- `src/hooks/usePracticeSession.ts`: `recordResult` calls `recordMistake(attempt)` right next to `recordAttempt`, so the pattern is saved the moment I Got It Wrong is clicked. The three saves (attempt, pattern, session) now each run even if an earlier one fails (before, a failed attempt save skipped the session save); the storage warning shows if any failed.
+- Patterns are read from localStorage on every wrong answer, so patterns saved in an earlier visit are picked up after a reload.
+- Tests: `src/services/mistakeService.test.ts` (18), 4 new in `src/hooks/usePracticeSession.test.tsx`, 1 new in `src/services/storageService.test.ts` (every kind of invalid pattern field dropped), plus pattern assertions in the existing real-UI test in `src/pages/PracticePage.storage.test.tsx`. Commands: `npx prettier --write .`, `npm run lint`, `npm test -- --run`, `npm run build`. No UI changed, so no screenshots.
+
+**Verification:**
+- `npm run lint`: pass, 0 errors, 0 warnings.
+- `npm test -- --run`: 30 files, 328/328 passed (305 before, 23 new). All new tests passed on their first run. Covers: a wrong answer creates one pattern with all fields; the same mistake (also 8 × 7 after 7 × 8, and 8 + 7 after 7 + 8) increments `incorrectCount` with no duplicate and keeps the first-missed operand order; 10 − 3 vs 3 − 10 and 56 ÷ 8 vs 56 ÷ 7 stay separate; same operands under another operation stay separate; level changes to the latest mistake's; a mastered pattern is un-mastered with progress back to 0; a correct answer creates nothing and changes no pattern; invalid stored patterns are dropped (valid ones kept) and unreadable JSON is replaced, without crashing; a failed save returns false; the pattern is in localStorage right after clicking I Got It Wrong on the real practice page (before the session ends); a pattern saved before the app started is updated, not duplicated.
+- `npm run build`: pass (JS 359.90 kB, 111.41 kB gzip).
+- TODO: all 13 Phase 12 items checked, plus task 62 "Allow a later mistake to reactivate a pattern", task 76 "Detect invalid settings, attempts, sessions, and patterns" and task 81 "Test an incorrect answer creating a pattern" (all covered by tests).
+- Manual checklist for you: (1) `npm run dev`, start a multiplication session, answer one question with I Got It Wrong, then in DevTools → Application → Local Storage check `mathPractice.mistakePatterns` has one entry with `incorrectCount: 1` (before finishing the session). (2) Answer I Got It Right on another question: no new entry. (3) Miss the same fact again (or its swapped form for × / +), e.g. in a later Level 1 session: still one entry, `incorrectCount: 2`, newer `lastIncorrectAt`. (4) Reload the page and miss it again: `incorrectCount: 3`. (5) Edit one entry by hand to something invalid (e.g. `"incorrectCount": -1`), reload, miss a question: the app works, the broken entry is gone, the others stay. (6) Reset Statistics keeps the entries; Clear All Application Data removes them.
+
+**Problems / open issues:**
+- No visible UI yet: patterns are only in localStorage until Phase 14 (review mode) and Phase 15 (mistake statistics).
+- Not covered by DECISIONS (chose the conservative option): a pattern updated by a repeat mistake keeps its first `correctAnswer` along with its first operands (the same fact, so the answer is the same). The pattern follows the child's self-reported result (DECISIONS 3.2), so choosing the right answer but pressing I Got It Wrong still creates a pattern.
+- Phase 14 must count correct review answers toward mastery (`similarCorrectCount`, threshold from Settings) and send wrong review answers through `addMistake`/`recordMistake`, which already applies DECISIONS 2.2.

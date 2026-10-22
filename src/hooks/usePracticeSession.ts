@@ -3,6 +3,7 @@ import { isConfigReady, type PracticeConfig } from '../app/practiceConfig';
 import { PracticeSessionContext, practiceSessionReducer } from '../app/practiceSession';
 import { useStorage } from '../app/storageContext';
 import type { QuestionCardResult } from '../components/practice/QuestionCard';
+import { recordMistake } from '../services/mistakeService';
 import { generateNextQuestion } from '../services/questionGenerator';
 import { playSound } from '../services/soundService';
 import { recordAttempt } from '../services/statisticsService';
@@ -80,7 +81,12 @@ export function usePracticeSession() {
       }
     }
     // Saved right away, so an answer is kept even if the session is never finished.
-    reportSave(recordAttempt(attempt) && saveSession(next.currentSession));
+    const saved = [
+      recordAttempt(attempt),
+      recordMistake(attempt),
+      saveSession(next.currentSession),
+    ];
+    reportSave(saved.every(Boolean));
   }
 
   function endSession() {

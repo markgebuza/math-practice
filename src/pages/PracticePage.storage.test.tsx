@@ -66,6 +66,18 @@ describe('saving practice data', () => {
     expect(sessions[0]).toMatchObject({ attempted: 1, correct: 0, incorrect: 1 });
     expect(sessions[0].completedAt).toBeUndefined();
     expect(attempts[0].sessionId).toBe(sessions[0].id);
+
+    expect(readData('mistakePatterns').value).toEqual([
+      expect.objectContaining({
+        operation: 'addition',
+        firstOperand: attempts[0].firstOperand,
+        secondOperand: attempts[0].secondOperand,
+        correctAnswer: attempts[0].correctAnswer,
+        difficulty: 1,
+        incorrectCount: 1,
+        lastIncorrectAt: attempts[0].attemptedAt,
+      }),
+    ]);
   });
 
   it('saves the completed session with its totals after the last answer', async () => {
