@@ -59,6 +59,7 @@ describe('SettingsPage', () => {
     expect(choice(/Sound effects/)).not.toBeChecked();
     expect(choice(/Card animation/)).toBeChecked();
     expect(choice(/Show explanations/)).toBeChecked();
+    expect(choice(/Cheering messages/)).toBeChecked();
     expect(choice(/Addition/)).toBeChecked();
     expect(choice(/Subtraction/)).not.toBeChecked();
     expect(radio(/Level 1: Beginner/)).toBeChecked();
@@ -85,6 +86,7 @@ describe('SettingsPage', () => {
 
     await userEvent.click(choice(/Card animation/));
     await userEvent.click(choice(/Show explanations/));
+    await userEvent.click(choice(/Cheering messages/));
     await userEvent.click(choice(/Division/));
     await userEvent.click(radio(/Level 3/));
     await userEvent.click(radio(/Keep going/));
@@ -94,6 +96,7 @@ describe('SettingsPage', () => {
       ...DEFAULT_SETTINGS,
       cardAnimation: false,
       showExplanations: false,
+      feedbackMessages: false,
       defaultOperations: ['addition', 'division'],
       defaultDifficulty: 3,
       defaultSessionLength: 'continuous',

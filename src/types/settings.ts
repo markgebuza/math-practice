@@ -5,6 +5,8 @@ export interface AppSettings {
   soundEffects: boolean;
   cardAnimation: boolean;
   showExplanations: boolean;
+  // Not in the spec: lets the "Great job!" style messages between cards be turned off.
+  feedbackMessages: boolean;
   defaultSessionLength: SessionLength;
   defaultDifficulty: DifficultyLevel;
   defaultOperations: MathOperation[];
@@ -16,6 +18,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   soundEffects: false,
   cardAnimation: true,
   showExplanations: true,
+  feedbackMessages: true,
   defaultSessionLength: 10,
   defaultDifficulty: 1,
   defaultOperations: ['addition'],

@@ -8,7 +8,7 @@
 
 .practice-page__feedback {
   min-height: 1.6em;
-  margin: 0;
+  margin: 0 0 var(--space-2);
   font-size: 1.25rem;
   font-weight: 800;
 }
@@ -34,6 +34,8 @@
 
 .practice-page__card {
   width: 100%;
+  /* Focusing the new card scrolls it into view; this keeps the feedback line above it visible too. */
+  scroll-margin-top: var(--space-3);
   animation: practice-card-in 0.3s ease-out;
 }
 

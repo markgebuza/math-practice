@@ -591,18 +591,18 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 
 ### 70. Optimize for Tablets
 
--   [ ] Use large touch targets.
--   [ ] Center the practice card.
--   [ ] Keep answer choices easy to reach.
--   [ ] Test portrait and landscape orientations.
+-   [x] Use large touch targets.
+-   [x] Center the practice card.
+-   [x] Keep answer choices easy to reach.
+-   [x] Test portrait and landscape orientations.
 
 ### 71. Optimize for Mobile
 
--   [ ] Stack answer choices when needed.
--   [ ] Adjust card width.
--   [ ] Prevent horizontal scrolling.
--   [ ] Simplify navigation.
--   [ ] Test small screen sizes.
+-   [x] Stack answer choices when needed.
+-   [x] Adjust card width.
+-   [x] Prevent horizontal scrolling.
+-   [x] Simplify navigation.
+-   [x] Test small screen sizes.
 
 ### 72. Optimize Statistics Layout
 
@@ -613,11 +613,11 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 
 ### 73. Add Child-Friendly Feedback
 
--   [ ] Add positive feedback messages.
--   [ ] Add supportive messages after mistakes.
--   [ ] Avoid shaming language.
--   [ ] Randomize feedback without distraction.
--   [ ] Allow feedback effects to be disabled.
+-   [x] Add positive feedback messages.
+-   [x] Add supportive messages after mistakes.
+-   [x] Avoid shaming language.
+-   [x] Randomize feedback without distraction.
+-   [x] Allow feedback effects to be disabled.
 
 ## Phase 18: Session Recovery and Navigation Safety
 

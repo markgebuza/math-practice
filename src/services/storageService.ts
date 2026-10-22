@@ -139,6 +139,7 @@ const SETTING_CHECKS: { [K in keyof AppSettings]: (value: unknown) => boolean } 
   soundEffects: (value) => typeof value === 'boolean',
   cardAnimation: (value) => typeof value === 'boolean',
   showExplanations: (value) => typeof value === 'boolean',
+  feedbackMessages: (value) => typeof value === 'boolean',
   defaultSessionLength: isSessionLength,
   defaultDifficulty: isDifficulty,
   defaultOperations: isOperationList,

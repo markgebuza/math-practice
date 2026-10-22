@@ -7,7 +7,9 @@ import { routes } from '../app/AppRoutes';
 import type { PracticeConfig } from '../app/practiceConfig';
 import { isSameQuestion } from '../services/questionGenerator';
 import { seedMathRandom } from '../test/seededRandom';
-import type { MathOperation } from '../types';
+import { writeData } from '../services/storageService';
+import { DEFAULT_SETTINGS, type MathOperation } from '../types';
+import { POSITIVE_FEEDBACK, SUPPORTIVE_FEEDBACK } from '../utils/feedback';
 
 function renderAt(path: string, initialPracticeConfig?: PracticeConfig) {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
@@ -63,6 +65,11 @@ async function tabTo(element: HTMLElement) {
   expect(element).toHaveFocus();
 }
 
+const escape = (text: string) => text.replace(/[.!?]/g, '\\$&');
+const POSITIVE = `(?:${POSITIVE_FEEDBACK.map(escape).join('|')})`;
+const SUPPORTIVE = `(?:${SUPPORTIVE_FEEDBACK.map(escape).join('|')})`;
+const feedbackLine = () => document.querySelector('.practice-page__feedback');
+
 const progress = () => screen.getByRole('progressbar', { name: 'Session progress' });
 
 afterEach(() => {
@@ -107,21 +114,19 @@ describe('PracticePage', () => {
     });
     expect(await screen.findByText('Question 2 of 5')).toBeInTheDocument();
     expect(progress()).toHaveAttribute('aria-valuenow', '1');
-    expect(screen.getByText('Great job! Here is question 2.')).toBeInTheDocument();
+    expect(feedbackLine()).toHaveTextContent(new RegExp(`^${POSITIVE} Here is question 2\\.$`));
     await waitFor(() =>
       expect(screen.getByRole('status')).toHaveTextContent(
-        /^Great job! Question 2 of 5: What is \d+ plus \d+\?$/,
+        new RegExp(`^${POSITIVE} Question 2 of 5: What is \\d+ plus \\d+\\?$`),
       ),
     );
 
     await answer('I Got It Wrong');
     expect(screen.getByText('Question 3 of 5')).toBeInTheDocument();
     expect(progress()).toHaveAttribute('aria-valuenow', '2');
-    expect(
-      screen.getByText('Thanks for being honest! You are improving. Here is question 3.'),
-    ).toBeInTheDocument();
+    expect(feedbackLine()).toHaveTextContent(new RegExp(`^${SUPPORTIVE} Here is question 3\\.$`));
     expect(screen.getByRole('status')).toHaveTextContent(
-      /^Thanks for being honest! You are improving\. Question 3 of 5: What is/,
+      new RegExp(`^${SUPPORTIVE} Question 3 of 5: What is`),
     );
   });
 
@@ -150,7 +155,7 @@ describe('PracticePage', () => {
     );
 
     await userEvent.click(screen.getByRole('button', { name: 'I Got It Right' }));
-    expect(status).toHaveTextContent(/^Great job! Question 2 of 5: What is/);
+    expect(status).toHaveTextContent(new RegExp(`^${POSITIVE} Question 2 of 5: What is`));
     expect(screen.getByRole('group', { name: 'Question 2' })).toHaveFocus();
   });
 
@@ -192,6 +197,52 @@ describe('PracticePage', () => {
 
     await screen.findByRole('heading', { level: 1, name: 'Session Summary' });
     expect(router.state.location.pathname).toBe('/practice/summary');
+  });
+
+  describe('feedback messages', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('keeps the message on screen until the next answer, however long the child takes', async () => {
+      seedMathRandom(14);
+      await startSession({ operations: ['addition'], difficulty: 1, sessionLength: 5 });
+      await answer();
+      const first = feedbackLine()!.textContent;
+      expect(first).toMatch(new RegExp(`^${POSITIVE} Here is question 2\\.$`));
+
+      vi.useFakeTimers();
+      act(() => vi.advanceTimersByTime(2500));
+      expect(feedbackLine()).toHaveTextContent(first!);
+      act(() => vi.advanceTimersByTime(60_000));
+      expect(feedbackLine()).toHaveTextContent(first!);
+      vi.useRealTimers();
+
+      await flipWithFirstChoice();
+      expect(feedbackLine()).toHaveTextContent(first!);
+
+      await userEvent.click(screen.getByRole('button', { name: 'I Got It Right' }));
+      const second = feedbackLine()!.textContent!;
+      expect(second).toMatch(new RegExp(`^${POSITIVE} Here is question 3\\.$`));
+      expect(second.replace(' Here is question 3.', '')).not.toBe(
+        first!.replace(' Here is question 2.', ''),
+      );
+    });
+
+    it('shows no messages when they are turned off in Settings', async () => {
+      writeData('settings', { ...DEFAULT_SETTINGS, feedbackMessages: false });
+      seedMathRandom(15);
+      await startSession({ operations: ['addition'], difficulty: 1, sessionLength: 5 });
+      await answer();
+      await answer('I Got It Wrong');
+      expect(screen.getByText('Question 3 of 5')).toBeInTheDocument();
+      expect(feedbackLine()).not.toBeInTheDocument();
+      const status = screen.getByRole('status');
+      expect(status).toHaveTextContent(/^Question 3 of 5: What is/);
+      for (const message of [...POSITIVE_FEEDBACK, ...SUPPORTIVE_FEEDBACK]) {
+        expect(screen.queryByText(message, { exact: false })).not.toBeInTheDocument();
+      }
+    });
   });
 
   it('resets the selection and flip state for the next question and focuses the new card', async () => {

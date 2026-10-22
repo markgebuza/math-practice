@@ -28,6 +28,24 @@ describe('routes', () => {
     expect(screen.getByRole('navigation', { name: 'Main' })).toBeInTheDocument();
   });
 
+  it('moves focus to the new page after in-app navigation, but not when the app opens', async () => {
+    renderAt('/');
+    await screen.findByRole('heading', { level: 1, name: 'Math Practice' });
+    expect(screen.getByRole('main')).not.toHaveFocus();
+
+    const nav = screen.getByRole('navigation', { name: 'Main' });
+    await userEvent.click(within(nav).getByRole('link', { name: 'Statistics' }));
+    await screen.findByRole('heading', { level: 1, name: 'Your Statistics' });
+    expect(screen.getByRole('main')).toHaveFocus();
+
+    await userEvent.click(screen.getByRole('link', { name: 'Start Practice' }));
+    await screen.findByRole('heading', { level: 1, name: 'Get Ready to Practice' });
+    expect(screen.getByRole('main')).toHaveFocus();
+    await userEvent.click(screen.getByRole('button', { name: 'Start Session' }));
+    await screen.findByRole('region', { name: 'Question card' });
+    expect(screen.getByRole('main')).toHaveFocus();
+  });
+
   it('shows a friendly not-found page with a way home for unknown URLs', async () => {
     const router = renderAt('/no-such-page');
     expect(

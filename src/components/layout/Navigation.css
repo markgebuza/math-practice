@@ -34,3 +34,23 @@
   text-decoration-thickness: 4px;
   text-underline-offset: 6px;
 }
+
+/* Phones: one evenly spaced row of links under the title instead of a ragged two-row wrap. */
+@media (max-width: 39.99rem) {
+  .site-header nav {
+    width: 100%;
+  }
+
+  .nav__list {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 2px;
+  }
+
+  .nav__link {
+    justify-content: center;
+    width: 100%;
+    padding: 0 2px;
+    font-size: 1rem;
+  }
+}

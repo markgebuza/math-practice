@@ -28,7 +28,7 @@ export interface HomeRedirectState {
 // DECISIONS 2.3
 const MASTERY_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-type Toggle = 'soundEffects' | 'cardAnimation' | 'showExplanations';
+type Toggle = 'soundEffects' | 'cardAnimation' | 'showExplanations' | 'feedbackMessages';
 
 export function SettingsPage() {
   const { settings, saveSettings, clearAllData } = useStorage();
@@ -106,6 +106,15 @@ export function SettingsPage() {
               description="Show how to work it out on the back of the card."
               checked={settings.showExplanations}
               onChange={() => toggle('showExplanations')}
+            />
+            <ChoiceTile
+              type="checkbox"
+              name="feedbackMessages"
+              value="on"
+              label="Cheering messages"
+              description="Show a kind message like “Great job!” after each answer."
+              checked={settings.feedbackMessages}
+              onChange={() => toggle('feedbackMessages')}
             />
           </div>
         </fieldset>

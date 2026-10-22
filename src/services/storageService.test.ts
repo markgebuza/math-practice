@@ -218,6 +218,28 @@ describe('storageService', () => {
     });
   });
 
+  it('loads settings saved before feedback messages existed with messages on', () => {
+    const { feedbackMessages, ...oldSettings } = { ...DEFAULT_SETTINGS, soundEffects: true };
+    expect(feedbackMessages).toBe(true);
+    localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(oldSettings));
+    expect(readData('settings')).toEqual({
+      value: { ...DEFAULT_SETTINGS, soundEffects: true, feedbackMessages: true },
+      status: 'ok',
+    });
+
+    localStorage.setItem(
+      STORAGE_KEYS.settings,
+      JSON.stringify({ ...oldSettings, feedbackMessages: 'off' }),
+    );
+    expect(readData('settings').value.feedbackMessages).toBe(true);
+
+    localStorage.setItem(
+      STORAGE_KEYS.settings,
+      JSON.stringify({ ...oldSettings, feedbackMessages: false }),
+    );
+    expect(readData('settings').value.feedbackMessages).toBe(false);
+  });
+
   describe('when storage fails', () => {
     it('reports a failed write instead of throwing when storage is full', () => {
       vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {

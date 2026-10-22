@@ -5,9 +5,10 @@ import { Button } from '../components/common/Button';
 import { ConfirmDialog } from '../components/common/ConfirmDialog';
 import { PageContainer } from '../components/layout/PageContainer';
 import { ProgressBar } from '../components/practice/ProgressBar';
-import { QuestionCard } from '../components/practice/QuestionCard';
+import { QuestionCard, type QuestionCardResult } from '../components/practice/QuestionCard';
 import { usePracticeSession } from '../hooks/usePracticeSession';
 import { spokenQuestion } from '../utils/explanations';
+import { pickFeedback } from '../utils/feedback';
 import { DIFFICULTY_NAMES, OPERATION_LABELS } from '../utils/labels';
 import './PracticePage.css';
 
@@ -20,7 +21,6 @@ export function PracticePage() {
     currentSession: session,
     currentQuestion: question,
     currentQuestionIndex,
-    attempts,
     isActive,
     reviewQueue,
     recordResult,
@@ -32,6 +32,8 @@ export function PracticePage() {
     null,
   );
   const [announcing, setAnnouncing] = useState(false);
+  // Shown with the next card and kept until the child answers that card, so it is never cleared by a timer.
+  const [lastFeedback, setLastFeedback] = useState<string | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const firstShownIndex = useRef(currentQuestionIndex);
 
@@ -57,13 +59,14 @@ export function PracticePage() {
   }
 
   const totalQuestions = session.sessionLength === 'continuous' ? undefined : session.sessionLength;
-  const lastAttempt = attempts.at(-1);
   const questionNumber = currentQuestionIndex + 1;
-  const feedback =
-    lastAttempt &&
-    (lastAttempt.selfReportedCorrect
-      ? 'Great job!'
-      : 'Thanks for being honest! You are improving.');
+  const feedback = settings.feedbackMessages ? lastFeedback : null;
+
+  function handleResult(result: QuestionCardResult) {
+    setLastFeedback(pickFeedback(result.selfReportedCorrect, lastFeedback));
+    recordResult(result);
+  }
+
   const questionAnnouncement = `${feedback ?? ''} Question ${questionNumber}${
     totalQuestions ? ` of ${totalQuestions}` : ''
   }: What is ${spokenQuestion(question)}?`.trim();
@@ -105,6 +108,11 @@ export function PracticePage() {
           role="group"
           aria-label={`Question ${questionNumber}`}
         >
+          {settings.feedbackMessages && (
+            <p className="practice-page__feedback">
+              {feedback && `${feedback} Here is question ${questionNumber}.`}
+            </p>
+          )}
           <QuestionCard
             question={question}
             questionNumber={questionNumber}
@@ -112,12 +120,9 @@ export function PracticePage() {
             showExplanations={settings.showExplanations}
             animationEnabled={settings.cardAnimation}
             onReveal={(selectedAnswer) => setRevealed({ questionId: question.id, selectedAnswer })}
-            onResult={recordResult}
+            onResult={handleResult}
           />
         </div>
-        <p className="practice-page__feedback">
-          {feedback && `${feedback} Here is question ${questionNumber}.`}
-        </p>
         <div className="visually-hidden" role="status">
           {announcing && announcement}
         </div>
