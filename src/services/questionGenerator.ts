@@ -67,8 +67,13 @@ const OPERAND_GENERATORS: Record<MathOperation, (difficulty: DifficultyLevel) =>
   division: generateDivisionOperands,
 };
 
-function buildQuestion(operation: MathOperation, difficulty: DifficultyLevel): Question {
-  const [firstOperand, secondOperand] = OPERAND_GENERATORS[operation](difficulty);
+// Builds a regular question from fixed operands; callers validate it.
+export function createQuestion(
+  operation: MathOperation,
+  firstOperand: number,
+  secondOperand: number,
+  difficulty: DifficultyLevel,
+): Question {
   const correctAnswer = calculateAnswer(operation, firstOperand, secondOperand);
   return {
     id: createId(),
@@ -81,6 +86,11 @@ function buildQuestion(operation: MathOperation, difficulty: DifficultyLevel): Q
     difficulty,
     source: 'regular',
   };
+}
+
+function buildQuestion(operation: MathOperation, difficulty: DifficultyLevel): Question {
+  const [firstOperand, secondOperand] = OPERAND_GENERATORS[operation](difficulty);
+  return createQuestion(operation, firstOperand, secondOperand, difficulty);
 }
 
 export function generateQuestion(operation: MathOperation, difficulty: DifficultyLevel): Question {

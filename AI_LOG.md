@@ -435,3 +435,34 @@ correct answer creates nothing, and invalid stored patterns are dropped without 
 - No visible UI yet: patterns are only in localStorage until Phase 14 (review mode) and Phase 15 (mistake statistics).
 - Not covered by DECISIONS (chose the conservative option): a pattern updated by a repeat mistake keeps its first `correctAnswer` along with its first operands (the same fact, so the answer is the same). The pattern follows the child's self-reported result (DECISIONS 3.2), so choosing the right answer but pressing I Got It Wrong still creates a pattern.
 - Phase 14 must count correct review answers toward mastery (`similarCorrectCount`, threshold from Settings) and send wrong review answers through `addMistake`/`recordMistake`, which already applies DECISIONS 2.2.
+
+### [2026-10-21 22:30] Phase 13: Similar Question Generation
+**My prompt:**
+Implement Phase 13 (tasks 54–57) with generateSimilarQuestion(pattern) as in spec section 19.
+
+Use the spec's example as a test: from a missed 8 × 7, the generator should be able to
+produce questions like 7 × 8, 8 × 6, 9 × 7, 56 ÷ 7, and 56 ÷ 8. Test every operation
+and level: results stay within the pattern's difficulty, subtraction and division stay
+valid, reversed subtraction/division are never treated as equivalent, every question
+passes validateQuestion with source "mistake-review" and the pattern ID attached.
+
+**What you did:**
+- Run by a Claude Code subagent using the Phase 13 prompt from PROMPTS.md (not manually tested by me before commit).
+- Already there: difficulty ranges (`difficultyRanges.ts`), `buildChoices`, `validateQuestion`, `isSameQuestion`, the `MistakePattern` type. Missing: everything in tasks 54–57.
+- New `src/services/similarQuestionGenerator.ts` with `generateSimilarQuestion(pattern, previous?)`. Three strategies: **nearby** (one operand ±1 or ±2; for division the quotient or divisor changes by ±1/±2 so the answer stays whole), **reversed** (addition and multiplication only), **fact family** (× → ÷ with both factors as divisor, ÷ → ×, + → −, − → +). Every candidate is built at the pattern's level and kept only if `validateQuestion` passes, so all results stay inside that level's ranges (e.g. 144 ÷ 12 at Level 3 never becomes 12 × 12, which is not a Level 3 multiplication). A random strategy with at least one valid candidate is chosen, then a random candidate.
+- The exact missed question (same operation and operands in the same order) is never returned. The optional `previous` question is excluded using `isSameQuestion` (DECISIONS 7/2.4) so Phase 14 can avoid showing the same review question twice in a row. If no candidate is valid, it falls back to `generateQuestion(pattern.operation, pattern.difficulty)`, regenerated to avoid the pattern and `previous`. Results get `source: 'mistake-review'` and `mistakePatternId: pattern.id`.
+- `src/services/questionGenerator.ts`: extracted an exported `createQuestion(operation, first, second, difficulty)` from the private `buildQuestion` (no behaviour change) so the similar generator reuses the same display text and `buildChoices`.
+- New `src/services/similarQuestionGenerator.test.ts` (8 tests, seeded randomness). Commands: `npx prettier --write .`, `npm run lint`, `npm test -- --run`, `npm run build`. No UI changed, so no screenshots.
+
+**Verification:**
+- First run of the new tests: 1 failed because of a mistake in the test (it assumed a question made from 5 × 5 was always a multiplication, but 25 ÷ 5 from the fact family is correct). Fixed the test to check each operation's limits; the generator was not changed.
+- `npm run lint`: pass, 0 errors, 0 warnings.
+- `npm test -- --run`: 31 files, 336/336 passed (328 before, 8 new). Covers: from 8 × 7 (Levels 2 and 3) it produces 7 × 8, 8 × 6, 9 × 7, 56 ÷ 7 and 56 ÷ 8, never 8 × 7; addition gives nearby, reversed and subtraction questions; subtraction gives addition and never 4 − 9 from 9 − 4; division gives multiplication and never 8 ÷ 56 from 56 ÷ 8; Level 1 limits hold for 10 + 10, 5 × 5 and 25 ÷ 5; for all 4 operations × 4 levels × 30 patterns × 10 questions, every question passes `validateQuestion`, keeps the level, has source `mistake-review` and the pattern ID, and is never the exact missed question; 200 questions in a row never repeat `previous`; a pattern with no valid similar question (20 × 20 at Level 1) falls back to a valid Level 1 multiplication.
+- `npm run build`: pass (JS 359.95 kB, 111.42 kB gzip; the new service is not imported by the app yet).
+- TODO: all 19 Phase 13 items checked, plus task 79 "Test similar-question generation".
+- Manual checklist for you: nothing visible yet. Review mode arrives in Phase 14; then check that review questions look related to the facts you missed (e.g. after missing 8 × 7: 7 × 8, 8 × 6, 56 ÷ 8) and that the same question never appears twice in a row.
+
+**Problems / open issues:**
+- Not covered by DECISIONS (chose the conservative option): "nearby" means one operand changes by 1 or 2 (no larger jumps at Levels 3–4); all three strategies are equally likely when each has a valid candidate; avoiding `previous` uses the commutative `isSameQuestion` rule, so after 7 × 8 the next review question will not be 8 × 7.
+- The fallback retries up to `MAX_GENERATION_ATTEMPTS` (20) to avoid the pattern and `previous`; in practice a valid similar candidate always exists for patterns that fit their level, so the fallback only runs for patterns whose stored level no longer fits their numbers.
+- Phase 14 must pick patterns by priority, pass the last review question as `previous`, and update mastery progress (the spec lists that under this service, but it belongs with review answers in Phase 14).

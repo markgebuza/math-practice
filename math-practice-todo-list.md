@@ -459,34 +459,34 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 
 ### 54. Generate Nearby-Number Questions
 
--   [ ] Use nearby operands.
--   [ ] Keep questions within difficulty limits.
--   [ ] Avoid invalid subtraction and division.
--   [ ] Avoid excessive exact repeats.
+-   [x] Use nearby operands.
+-   [x] Keep questions within difficulty limits.
+-   [x] Avoid invalid subtraction and division.
+-   [x] Avoid excessive exact repeats.
 
 ### 55. Generate Reversed-Operand Questions
 
--   [ ] Reverse addition operands.
--   [ ] Reverse multiplication operands.
--   [ ] Do not treat reversed subtraction as equivalent.
--   [ ] Do not treat reversed division as equivalent.
+-   [x] Reverse addition operands.
+-   [x] Reverse multiplication operands.
+-   [x] Do not treat reversed subtraction as equivalent.
+-   [x] Do not treat reversed division as equivalent.
 
 ### 56. Generate Fact-Family Questions
 
--   [ ] Generate division questions from multiplication mistakes.
--   [ ] Generate multiplication questions from division mistakes.
--   [ ] Generate addition questions from subtraction mistakes.
--   [ ] Generate subtraction questions from addition mistakes.
--   [ ] Keep generated questions within the selected difficulty.
+-   [x] Generate division questions from multiplication mistakes.
+-   [x] Generate multiplication questions from division mistakes.
+-   [x] Generate addition questions from subtraction mistakes.
+-   [x] Generate subtraction questions from addition mistakes.
+-   [x] Keep generated questions within the selected difficulty.
 
 ### 57. Create the Similar Question Generator
 
--   [ ] Accept a mistake pattern.
--   [ ] Choose a similarity strategy.
--   [ ] Generate a valid related question.
--   [ ] Set source to `mistake-review`.
--   [ ] Attach the mistake-pattern ID.
--   [ ] Test all operations.
+-   [x] Accept a mistake pattern.
+-   [x] Choose a similarity strategy.
+-   [x] Generate a valid related question.
+-   [x] Set source to `mistake-review`.
+-   [x] Attach the mistake-pattern ID.
+-   [x] Test all operations.
 
 ## Phase 14: Mistake Review Mode
 
@@ -667,7 +667,7 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 -   [ ] Test all arithmetic generators.
 -   [ ] Test difficulty boundaries.
 -   [ ] Test distractors and choice uniqueness.
--   [ ] Test similar-question generation.
+-   [x] Test similar-question generation.
 -   [x] Test statistics calculations.
 -   [ ] Test mastery rules.
 -   [ ] Test storage serialization and validation.
