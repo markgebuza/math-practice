@@ -393,3 +393,15 @@ Clear All Application Data needs a clear warning, then returns home with default
 - Sounds were tested only against a mocked `AudioContext` (jsdom has no Web Audio); whether they are audible and pleasant needs your ears in a real browser.
 - A settings value saved outside the offered options (e.g. a session length of 15 edited by hand) is still valid per the Phase 9 validator but no radio button shows it as selected.
 - Phase 14 must read `settings.masteryThreshold` (and apply DECISIONS 2.3 lowering rule). Phase 21/22 will add the privacy note to Settings. Phase 16 should check the switches and the dialog with a screen reader.
+
+### [2026-10-21 22:23] Fix: accuracy rounds down
+**My prompt:** yes, round down to 99%
+**What you did:**
+- Context: after Phase 10, accuracy used `Math.round`, so 249 correct out of 250 showed "100%" next to "Incorrect 1". I chose to round down instead.
+- Changed `calculateAccuracy` in `src/utils/math.ts` to `Math.floor((correct * 100) / attempted)`. Multiplying before dividing avoids floating-point drift (e.g. `29 / 100 * 100` is 28.999…, which would floor to 28). This one function is used by the session summary and the statistics page, so both change together.
+- Updated `src/utils/math.test.ts`: 2 of 3 is now 66%, plus regression tests (249/250 → 99%, 999/1000 → 99%, 1/201 → 0%) and a check that every n/100 gives exactly n%.
+**Verification:**
+- The new tests were run against the old code first: 2 failed (as expected), 8 passed. With the fix: all pass.
+- `npm run lint`: pass, 0 errors. `npm test -- --run`: 29 files, 305/305 passed. `npm run build`: pass.
+- Manual: answer 3 questions with 2 marked right; the summary and Statistics show 66%, not 67%.
+**Problems / open issues:** None.

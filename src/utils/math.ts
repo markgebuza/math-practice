@@ -6,7 +6,8 @@ export function randomInt(min: number, max: number) {
 }
 
 export function calculateAccuracy(correct: number, attempted: number) {
-  return attempted > 0 ? Math.round((correct / attempted) * 100) : 0;
+  // Round down so 100% only ever means every answer was right
+  return attempted > 0 ? Math.floor((correct * 100) / attempted) : 0;
 }
 
 export function randomItem<T>(items: readonly T[]): T {

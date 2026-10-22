@@ -52,6 +52,18 @@ describe('calculateAccuracy', () => {
     expect(calculateAccuracy(5, 5)).toBe(100);
     expect(calculateAccuracy(0, 5)).toBe(0);
     expect(calculateAccuracy(4, 5)).toBe(80);
-    expect(calculateAccuracy(2, 3)).toBe(67);
+    expect(calculateAccuracy(2, 3)).toBe(66);
+  });
+
+  it('rounds down, so 100% only appears when every answer was right', () => {
+    expect(calculateAccuracy(249, 250)).toBe(99);
+    expect(calculateAccuracy(999, 1000)).toBe(99);
+    expect(calculateAccuracy(1, 201)).toBe(0);
+  });
+
+  it('gives exact whole percentages without floating-point drift', () => {
+    for (let correct = 0; correct <= 100; correct++) {
+      expect(calculateAccuracy(correct, 100)).toBe(correct);
+    }
   });
 });
