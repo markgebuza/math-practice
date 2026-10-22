@@ -160,6 +160,15 @@ describe('automated accessibility check (axe)', () => {
     expect(await axeViolations()).toEqual([]);
   });
 
+  it('leave-session dialog from the header navigation', async () => {
+    await startSession(SHORT_SESSION);
+    await userEvent.click(screen.getByRole('link', { name: 'Settings' }));
+    expect(
+      screen.getByRole('dialog', { name: 'Leave your practice session?' }),
+    ).toBeInTheDocument();
+    expect(await axeViolations()).toEqual([]);
+  });
+
   it('summary after a finished session', async () => {
     await startSession({ ...SHORT_SESSION, sessionLength: 'continuous' });
     await selectAndFlip();

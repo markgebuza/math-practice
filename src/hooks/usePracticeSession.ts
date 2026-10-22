@@ -148,6 +148,19 @@ export function usePracticeSession() {
     reportSave(saved.every(Boolean));
   }
 
+  function selectAnswer(answer: number) {
+    dispatch({ type: 'selectAnswer', answer });
+  }
+
+  function flipCard() {
+    dispatch({ type: 'flipCard' });
+  }
+
+  // Drops an unfinished session without saving it.
+  function discardSession() {
+    dispatch({ type: 'reset' });
+  }
+
   function endSession() {
     const action = { type: 'endSession', completedAt: new Date().toISOString() } as const;
     const next = practiceSessionReducer(state, action);
@@ -161,5 +174,14 @@ export function usePracticeSession() {
     }
   }
 
-  return { ...state, startSession, startReviewSession, recordResult, endSession };
+  return {
+    ...state,
+    startSession,
+    startReviewSession,
+    selectAnswer,
+    flipCard,
+    recordResult,
+    endSession,
+    discardSession,
+  };
 }

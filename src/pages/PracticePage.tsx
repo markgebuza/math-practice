@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Navigate } from 'react-router';
+import { Navigate, useBlocker } from 'react-router';
 import { useStorage } from '../app/storageContext';
 import { Button } from '../components/common/Button';
 import { ConfirmDialog } from '../components/common/ConfirmDialog';
@@ -21,21 +21,44 @@ export function PracticePage() {
     currentSession: session,
     currentQuestion: question,
     currentQuestionIndex,
+    selectedAnswer,
+    isCardFlipped,
     isActive,
     reviewQueue,
+    selectAnswer,
+    flipCard,
     recordResult,
     endSession,
   } = usePracticeSession();
   const { settings } = useStorage();
   const [confirmingEnd, setConfirmingEnd] = useState(false);
-  const [revealed, setRevealed] = useState<{ questionId: string; selectedAnswer: number } | null>(
-    null,
-  );
+  const [leaving, setLeaving] = useState(false);
   const [announcing, setAnnouncing] = useState(false);
   // Shown with the next card and kept until the child answers that card, so it is never cleared by a timer.
   const [lastFeedback, setLastFeedback] = useState<string | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const firstShownIndex = useRef(currentQuestionIndex);
+
+  // The summary is where a finished or ended session goes, so that move is never blocked.
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      isActive &&
+      nextLocation.pathname !== currentLocation.pathname &&
+      nextLocation.pathname !== '/practice/summary',
+  );
+
+  // Closing or refreshing the tab gets the browser's own warning; a refresh then restores the session.
+  useEffect(() => {
+    if (!isActive) {
+      return;
+    }
+    function handleBeforeUnload(event: BeforeUnloadEvent) {
+      event.preventDefault();
+      event.returnValue = '';
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isActive]);
 
   // Live regions only announce changes, so the first question is added just after the region appears.
   useEffect(() => {
@@ -50,6 +73,10 @@ export function PracticePage() {
     }
   }, [currentQuestionIndex]);
 
+  // Rendering nothing stops the redirect to the summary from racing the page the child chose.
+  if (leaving) {
+    return null;
+  }
   if (!session) {
     const state: PracticeRedirectState = { noSession: true };
     return <Navigate to="/practice/setup" replace state={state} />;
@@ -62,6 +89,12 @@ export function PracticePage() {
   const questionNumber = currentQuestionIndex + 1;
   const feedback = settings.feedbackMessages ? lastFeedback : null;
 
+  function leaveSession() {
+    setLeaving(true);
+    endSession();
+    blocker.proceed?.();
+  }
+
   function handleResult(result: QuestionCardResult) {
     setLastFeedback(pickFeedback(result.selfReportedCorrect, lastFeedback));
     recordResult(result);
@@ -71,8 +104,8 @@ export function PracticePage() {
     totalQuestions ? ` of ${totalQuestions}` : ''
   }: What is ${spokenQuestion(question)}?`.trim();
   const announcement =
-    revealed?.questionId === question.id
-      ? `Correct answer: ${question.correctAnswer}. Your answer: ${revealed.selectedAnswer}.`
+    isCardFlipped && selectedAnswer !== null
+      ? `Correct answer: ${question.correctAnswer}. Your answer: ${selectedAnswer}.`
       : questionAnnouncement;
 
   return (
@@ -119,7 +152,10 @@ export function PracticePage() {
             totalQuestions={totalQuestions}
             showExplanations={settings.showExplanations}
             animationEnabled={settings.cardAnimation}
-            onReveal={(selectedAnswer) => setRevealed({ questionId: question.id, selectedAnswer })}
+            initialSelectedAnswer={selectedAnswer}
+            initialFlipped={isCardFlipped}
+            onSelect={selectAnswer}
+            onReveal={flipCard}
             onResult={handleResult}
           />
         </div>
@@ -140,6 +176,16 @@ export function PracticePage() {
           cancelLabel="Keep Practicing"
           onConfirm={endSession}
           onCancel={() => setConfirmingEnd(false)}
+        />
+      )}
+      {blocker.state === 'blocked' && (
+        <ConfirmDialog
+          title="Leave your practice session?"
+          message="If you leave now, this session will end. Your answers so far are saved."
+          confirmLabel="End Session and Leave"
+          cancelLabel="Keep Practicing"
+          onConfirm={leaveSession}
+          onCancel={() => blocker.reset()}
         />
       )}
     </PageContainer>

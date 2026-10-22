@@ -16,6 +16,10 @@ interface QuestionCardProps {
   totalQuestions?: number;
   showExplanations?: boolean;
   animationEnabled?: boolean;
+  // Restores a card after a page refresh.
+  initialSelectedAnswer?: number | null;
+  initialFlipped?: boolean;
+  onSelect?: (answer: number) => void;
   onReveal?: (selectedAnswer: number) => void;
   onResult: (result: QuestionCardResult) => void;
 }
@@ -31,11 +35,16 @@ function QuestionCardContent({
   totalQuestions,
   showExplanations = true,
   animationEnabled = true,
+  initialSelectedAnswer = null,
+  initialFlipped = false,
+  onSelect,
   onReveal,
   onResult,
 }: QuestionCardProps) {
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [isCardFlipped, setIsCardFlipped] = useState(false);
+  const [selectedAnswer, setSelectedAnswer] = useState(initialSelectedAnswer);
+  const [isCardFlipped, setIsCardFlipped] = useState(
+    initialFlipped && initialSelectedAnswer !== null,
+  );
   const [submitted, setSubmitted] = useState(false);
   const submittedRef = useRef(false);
   const backHeadingRef = useRef<HTMLHeadingElement>(null);
@@ -51,6 +60,7 @@ function QuestionCardContent({
   function handleSelect(answer: number) {
     if (!isCardFlipped) {
       setSelectedAnswer(answer);
+      onSelect?.(answer);
     }
   }
 

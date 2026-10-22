@@ -1,4 +1,5 @@
 import type {
+  ActiveSession,
   AppSettings,
   AppStatistics,
   DifficultyLevel,
@@ -7,9 +8,11 @@ import type {
   OperationStatistics,
   PracticeAttempt,
   PracticeSession,
+  Question,
 } from '../types';
 import { createEmptyStatistics, DEFAULT_SETTINGS } from '../types';
 import { DIFFICULTY_LEVELS, OPERATIONS } from '../utils/labels';
+import { validateQuestion } from '../utils/validation';
 
 export interface StoredData {
   settings: AppSettings;
@@ -21,13 +24,14 @@ export interface StoredData {
 
 export type DataKey = keyof StoredData;
 
-export const STORAGE_KEYS: Record<DataKey | 'version', string> = {
+export const STORAGE_KEYS: Record<DataKey | 'version' | 'activeSession', string> = {
   settings: 'mathPractice.settings',
   sessions: 'mathPractice.sessions',
   attempts: 'mathPractice.attempts',
   mistakePatterns: 'mathPractice.mistakePatterns',
   statistics: 'mathPractice.statistics',
   version: 'mathPractice.version',
+  activeSession: 'mathPractice.activeSession',
 };
 
 const DATA_KEYS: DataKey[] = ['settings', 'sessions', 'attempts', 'mistakePatterns', 'statistics'];
@@ -256,7 +260,92 @@ export function clearData(keys: DataKey[]): boolean {
 
 // Removes only this app's keys, never anything else stored for the site.
 export function clearAllData(): boolean {
-  return clearData(DATA_KEYS);
+  return removeKeys([...DATA_KEYS.map((key) => STORAGE_KEYS[key]), STORAGE_KEYS.activeSession]);
+}
+
+function isQuestion(value: unknown): value is Question {
+  return (
+    isRecord(value) &&
+    isText(value.id) &&
+    isText(value.displayText) &&
+    Array.isArray(value.choices) &&
+    (value.source === 'regular' || value.source === 'mistake-review') &&
+    (value.mistakePatternId === undefined || isText(value.mistakePatternId)) &&
+    validateQuestion(value as unknown as Question).length === 0
+  );
+}
+
+function isActiveSession(value: unknown): value is ActiveSession {
+  if (
+    !isRecord(value) ||
+    !isSession(value.session) ||
+    value.session.completedAt !== undefined ||
+    !isQuestion(value.currentQuestion) ||
+    !Array.isArray(value.attempts) ||
+    !value.attempts.every(isAttempt) ||
+    typeof value.isCardFlipped !== 'boolean'
+  ) {
+    return false;
+  }
+  const { session, currentQuestion, attempts, selectedAnswer, reviewQueue } = value;
+  const isReview = currentQuestion.source === 'mistake-review';
+  return (
+    value.currentQuestionIndex === session.attempted &&
+    attempts.length === session.attempted &&
+    attempts.every((attempt) => attempt.sessionId === session.id) &&
+    (session.sessionLength === 'continuous' || session.attempted < session.sessionLength) &&
+    (selectedAnswer === null
+      ? !value.isCardFlipped
+      : currentQuestion.choices.includes(selectedAnswer as number)) &&
+    (isReview
+      ? Array.isArray(reviewQueue) && reviewQueue.length > 0 && reviewQueue.every(isText)
+      : reviewQueue === null)
+  );
+}
+
+// Invalid data, or a question whose answer was already saved (it would be counted twice), is dropped.
+export function loadActiveSession(): ActiveSession | null {
+  let raw: string | null;
+  try {
+    raw = getStorage()?.getItem(STORAGE_KEYS.activeSession) ?? null;
+  } catch {
+    return null;
+  }
+  if (raw === null) {
+    return null;
+  }
+  let parsed: unknown = null;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    // Handled as invalid below.
+  }
+  if (
+    !isActiveSession(parsed) ||
+    readData('attempts').value.some((attempt) => attempt.questionId === parsed.currentQuestion.id)
+  ) {
+    removeKeys([STORAGE_KEYS.activeSession]);
+    return null;
+  }
+  return parsed;
+}
+
+// null removes it. If saving fails the old copy is removed too, so a stale session is never restored.
+export function saveActiveSession(active: ActiveSession | null): boolean {
+  if (active === null) {
+    return removeKeys([STORAGE_KEYS.activeSession]);
+  }
+  try {
+    const storage = getStorage();
+    if (!storage) {
+      return false;
+    }
+    storage.setItem(STORAGE_KEYS.activeSession, JSON.stringify(active));
+    return true;
+  } catch {
+    removeKeys([STORAGE_KEYS.activeSession]);
+    return false;
+  }
 }
 
 export function runMigrations(

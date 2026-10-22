@@ -15,3 +15,14 @@ export interface AppState {
   mistakePatterns: MistakePattern[];
   statistics: AppStatistics;
 }
+
+// An unfinished session, saved so a refresh can continue it.
+export interface ActiveSession {
+  session: PracticeSession;
+  currentQuestion: Question;
+  currentQuestionIndex: number;
+  selectedAnswer: number | null;
+  isCardFlipped: boolean;
+  attempts: PracticeAttempt[];
+  reviewQueue: string[] | null;
+}

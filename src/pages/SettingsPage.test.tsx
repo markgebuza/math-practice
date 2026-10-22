@@ -1,4 +1,4 @@
-import { act, render, screen, within } from '@testing-library/react';
+import { act, cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
@@ -291,10 +291,12 @@ describe('Clear All Application Data', () => {
 
   it('clears all app data, restores the defaults and returns home', async () => {
     seedEverything();
-    const router = renderAt('/');
-    await startSessionFromSetup(router);
-
-    await goTo(router, '/settings', 'Settings');
+    await startSessionFromSetup(renderAt('/'));
+    // Reopened on Settings: the unfinished session is restored from storage but not on screen.
+    cleanup();
+    expect(localStorage.getItem(STORAGE_KEYS.activeSession)).not.toBeNull();
+    const router = renderAt('/settings');
+    await screen.findByRole('heading', { level: 1, name: 'Settings' });
     await userEvent.click(screen.getByRole('button', { name: 'Clear All Application Data' }));
     await userEvent.click(screen.getByRole('button', { name: 'Yes, Clear Everything' }));
 
@@ -307,6 +309,7 @@ describe('Clear All Application Data', () => {
       'attempts',
       'mistakePatterns',
       'statistics',
+      'activeSession',
     ] as const) {
       expect(localStorage.getItem(STORAGE_KEYS[key])).toBeNull();
     }

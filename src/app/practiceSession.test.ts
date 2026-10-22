@@ -1,7 +1,9 @@
 import type { PracticeAttempt, PracticeSession, Question, SessionLength } from '../types';
 import {
+  fromActiveSession,
   INITIAL_SESSION_STATE,
   practiceSessionReducer,
+  toActiveSession,
   type PracticeSessionState,
 } from './practiceSession';
 
@@ -168,5 +170,55 @@ describe('practiceSessionReducer', () => {
     const snapshot = structuredClone(started);
     answer(started, true, 'q2');
     expect(started).toEqual(snapshot);
+  });
+});
+
+describe('practiceSessionReducer card state', () => {
+  const select = (state: PracticeSessionState, answer: number) =>
+    practiceSessionReducer(state, { type: 'selectAnswer', answer });
+  const flip = (state: PracticeSessionState) => practiceSessionReducer(state, { type: 'flipCard' });
+
+  it('keeps the selected answer and flip state, and clears them for the next question', () => {
+    const selected = select(start(5), 1);
+    expect(selected.selectedAnswer).toBe(1);
+    expect(selected.isCardFlipped).toBe(false);
+    const flipped = flip(selected);
+    expect(flipped.isCardFlipped).toBe(true);
+    const next = answer(flipped, true, 'q4');
+    expect(next.selectedAnswer).toBeNull();
+    expect(next.isCardFlipped).toBe(false);
+  });
+
+  it('only flips a card with a selected answer', () => {
+    const state = start(5);
+    expect(flip(state)).toBe(state);
+  });
+
+  it('does not change the answer after flipping or accept an answer that is not a choice', () => {
+    const flipped = flip(select(start(5), 1));
+    expect(select(flipped, 2)).toBe(flipped);
+    const state = start(5);
+    expect(select(state, 99)).toBe(state);
+  });
+
+  it('turns an active session into saved data and back', () => {
+    const state = flip(select(answer(start(5), false, 'q4'), 7));
+    const saved = toActiveSession(state);
+    expect(saved).toMatchObject({
+      currentQuestionIndex: 1,
+      selectedAnswer: 7,
+      isCardFlipped: true,
+    });
+    expect(fromActiveSession(structuredClone(saved))).toEqual(state);
+  });
+
+  it('saves nothing for a finished or missing session', () => {
+    expect(toActiveSession(INITIAL_SESSION_STATE)).toBeNull();
+    const ended = practiceSessionReducer(start('continuous'), {
+      type: 'endSession',
+      completedAt: '2026-10-21T10:02:00.000Z',
+    });
+    expect(toActiveSession(ended)).toBeNull();
+    expect(fromActiveSession(null)).toBe(INITIAL_SESSION_STATE);
   });
 });

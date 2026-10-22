@@ -1,6 +1,11 @@
-import { useCallback, useMemo, useReducer, useState, type ReactNode } from 'react';
+import { useCallback, useMemo, useReducer, useRef, useState, type ReactNode } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { clearAllData as clearStoredData, initializeStorage } from '../services/storageService';
+import {
+  clearAllData as clearStoredData,
+  initializeStorage,
+  loadActiveSession,
+  saveActiveSession,
+} from '../services/storageService';
 import type { AppSettings } from '../types';
 import {
   PracticeConfigContext,
@@ -9,9 +14,11 @@ import {
   type PracticeConfig,
 } from './practiceConfig';
 import {
-  INITIAL_SESSION_STATE,
+  fromActiveSession,
   PracticeSessionContext,
   practiceSessionReducer,
+  toActiveSession,
+  type PracticeSessionAction,
 } from './practiceSession';
 import { StorageContext } from './storageContext';
 
@@ -40,8 +47,28 @@ export function AppProvider({ children, initialPracticeConfig }: AppProviderProp
     () => initialPracticeConfig ?? practiceConfigFromSettings(settings),
   );
   const configValue = useMemo(() => ({ config, dispatch }), [config]);
-  const [session, sessionDispatch] = useReducer(practiceSessionReducer, INITIAL_SESSION_STATE);
-  const sessionValue = useMemo(() => ({ state: session, dispatch: sessionDispatch }), [session]);
+  const [session, setSession] = useState(() => fromActiveSession(loadActiveSession()));
+  const sessionRef = useRef(session);
+  // Saved in the same event as the answer itself, so a refresh can never restore a question
+  // whose answer was already recorded. A finished session is removed from storage.
+  const sessionDispatch = useCallback(
+    (action: PracticeSessionAction) => {
+      const next = practiceSessionReducer(sessionRef.current, action);
+      if (next === sessionRef.current) {
+        return;
+      }
+      sessionRef.current = next;
+      setSession(next);
+      if (!saveActiveSession(toActiveSession(next))) {
+        reportSave(false);
+      }
+    },
+    [reportSave],
+  );
+  const sessionValue = useMemo(
+    () => ({ state: session, dispatch: sessionDispatch }),
+    [session, sessionDispatch],
+  );
 
   // New defaults are copied into the setup choices right away, so the setup page shows them.
   const saveSettings = useCallback(
@@ -61,7 +88,7 @@ export function AppProvider({ children, initialPracticeConfig }: AppProviderProp
     dispatch({ type: 'reset', config: practiceConfigFromSettings(reloadSettings()) });
     sessionDispatch({ type: 'reset' });
     return cleared;
-  }, [reportSave, reloadSettings]);
+  }, [reportSave, reloadSettings, sessionDispatch]);
 
   const storageValue = useMemo(
     () => ({ settings, saveSettings, saveFailed, reportSave, clearAllData }),

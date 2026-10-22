@@ -623,18 +623,18 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 
 ### 74. Persist an Active Session
 
--   [ ] Save the active session.
--   [ ] Save the current question.
--   [ ] Save selected answer when appropriate.
--   [ ] Restore the session after refresh.
--   [ ] Clear restored state when the session ends.
+-   [x] Save the active session.
+-   [x] Save the current question.
+-   [x] Save selected answer when appropriate.
+-   [x] Restore the session after refresh.
+-   [x] Clear restored state when the session ends.
 
 ### 75. Protect Against Accidental Navigation
 
--   [ ] Detect attempts to leave an active session.
--   [ ] Show a confirmation prompt.
--   [ ] Allow continuing or ending the session.
--   [ ] Avoid warnings after completion.
+-   [x] Detect attempts to leave an active session.
+-   [x] Show a confirmation prompt.
+-   [x] Allow continuing or ending the session.
+-   [x] Avoid warnings after completion.
 
 ## Phase 19: Error Handling
 
@@ -689,7 +689,7 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 -   [x] Test an incorrect answer creating a pattern.
 -   [x] Test mistake-review generation.
 -   [x] Test mastery completion.
--   [ ] Test persistence after refresh.
+-   [x] Test persistence after refresh.
 -   [x] Test resetting statistics.
 
 ### 82. Complete Accessibility Testing

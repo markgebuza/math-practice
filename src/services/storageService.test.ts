@@ -1,12 +1,14 @@
-import type { AppStatistics, PracticeAttempt, PracticeSession } from '../types';
+import type { ActiveSession, AppStatistics, PracticeAttempt, PracticeSession } from '../types';
 import { createEmptyStatistics, DEFAULT_SETTINGS } from '../types';
 import {
   clearAllData,
   clearData,
   initializeStorage,
+  loadActiveSession,
   loadRecentSessions,
   readData,
   runMigrations,
+  saveActiveSession,
   saveAttempt,
   saveSession,
   SCHEMA_VERSION,
@@ -45,6 +47,35 @@ function makeSession(overrides: Partial<PracticeSession> = {}): PracticeSession 
     attempted: 10,
     correct: 8,
     incorrect: 2,
+    ...overrides,
+  };
+}
+
+// One answered question (8 × 7, missed), now on question 2 with 12 picked and the card flipped.
+function makeActiveSession(overrides: Partial<ActiveSession> = {}): ActiveSession {
+  return {
+    session: makeSession({
+      completedAt: undefined,
+      attempted: 1,
+      correct: 0,
+      incorrect: 1,
+    }),
+    currentQuestion: {
+      id: 'question-2',
+      operation: 'addition',
+      firstOperand: 7,
+      secondOperand: 5,
+      displayText: '7 + 5',
+      correctAnswer: 12,
+      choices: [11, 12, 13, 14],
+      difficulty: 2,
+      source: 'regular',
+    },
+    currentQuestionIndex: 1,
+    selectedAnswer: 12,
+    isCardFlipped: true,
+    attempts: [makeAttempt()],
+    reviewQueue: null,
     ...overrides,
   };
 }
@@ -319,10 +350,12 @@ describe('storageService', () => {
     it('clears all app data but nothing that belongs to another app', () => {
       storeAll();
       localStorage.setItem('otherApp.data', 'keep me');
+      saveActiveSession(makeActiveSession());
       expect(clearAllData()).toBe(true);
       for (const key of DATA_KEYS) {
         expect(localStorage.getItem(STORAGE_KEYS[key])).toBeNull();
       }
+      expect(localStorage.getItem(STORAGE_KEYS.activeSession)).toBeNull();
       expect(localStorage.getItem('otherApp.data')).toBe('keep me');
     });
   });
@@ -363,6 +396,79 @@ describe('storageService', () => {
         'session-24',
         'session-23',
       ]);
+    });
+  });
+
+  describe('active session', () => {
+    const storedActive = () => localStorage.getItem(STORAGE_KEYS.activeSession);
+
+    it('saves and loads an unfinished session', () => {
+      expect(saveActiveSession(makeActiveSession())).toBe(true);
+      expect(loadActiveSession()).toEqual(makeActiveSession());
+    });
+
+    it('removes the saved session when given null', () => {
+      saveActiveSession(makeActiveSession());
+      expect(saveActiveSession(null)).toBe(true);
+      expect(storedActive()).toBeNull();
+      expect(loadActiveSession()).toBeNull();
+    });
+
+    it.each<[string, () => string | Partial<ActiveSession>]>([
+      ['broken JSON', () => '{"session":'],
+      [
+        'a finished session',
+        () => ({
+          session: { ...makeActiveSession().session, completedAt: '2026-10-21T10:05:00.000Z' },
+        }),
+      ],
+      ['totals that do not match the answers', () => ({ attempts: [] })],
+      ['a wrong question index', () => ({ currentQuestionIndex: 3 })],
+      ['an answer that is not a choice', () => ({ selectedAnswer: 99 })],
+      ['a flipped card with no answer', () => ({ selectedAnswer: null })],
+      [
+        'an invalid question',
+        () => ({ currentQuestion: { ...makeActiveSession().currentQuestion, correctAnswer: 13 } }),
+      ],
+      [
+        'a review question without a review queue',
+        () => ({
+          currentQuestion: { ...makeActiveSession().currentQuestion, source: 'mistake-review' },
+        }),
+      ],
+      [
+        'an answer from another session',
+        () => ({ attempts: [makeAttempt({ sessionId: 'other' })] }),
+      ],
+    ])('drops only the saved session when it has %s', (_, change) => {
+      storeAll();
+      const changed = change();
+      localStorage.setItem(
+        STORAGE_KEYS.activeSession,
+        typeof changed === 'string' ? changed : JSON.stringify(makeActiveSession(changed)),
+      );
+      expect(loadActiveSession()).toBeNull();
+      expect(storedActive()).toBeNull();
+      for (const key of DATA_KEYS) {
+        expect(readData(key).value).toEqual(VALID_DATA[key]);
+      }
+    });
+
+    it('drops a session whose current question was already answered and saved', () => {
+      saveActiveSession(makeActiveSession());
+      saveAttempt(makeAttempt({ id: 'attempt-2', questionId: 'question-2' }));
+      expect(loadActiveSession()).toBeNull();
+      expect(storedActive()).toBeNull();
+    });
+
+    it('removes the old copy when saving fails, so it is never restored', () => {
+      saveActiveSession(makeActiveSession());
+      vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+        throw new DOMException('Full', 'QuotaExceededError');
+      });
+      expect(saveActiveSession(makeActiveSession({ selectedAnswer: 11 }))).toBe(false);
+      vi.restoreAllMocks();
+      expect(storedActive()).toBeNull();
     });
   });
 });

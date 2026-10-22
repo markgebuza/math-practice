@@ -16,7 +16,8 @@ const RESET_DONE =
 const RESET_FAILED = "Your statistics couldn't be reset right now. Please try again later.";
 
 export function StatisticsPage() {
-  const { statistics, recentSessions, mistakePatterns, masteryThreshold, reset } = useStatistics();
+  const { statistics, recentSessions, mistakePatterns, masteryThreshold, hasActiveSession, reset } =
+    useStatistics();
   const [isConfirming, setIsConfirming] = useState(false);
   const [message, setMessage] = useState('');
   const messageRef = useRef<HTMLParagraphElement>(null);
@@ -67,7 +68,9 @@ export function StatisticsPage() {
       {isConfirming && (
         <ConfirmDialog
           title="Reset your statistics?"
-          message="This clears all your answers, practice sessions, and statistics. Your mistakes to practice and your settings will be kept. This can't be undone."
+          message={`This clears all your answers, practice sessions, and statistics.${
+            hasActiveSession ? ' Your unfinished practice session will end too.' : ''
+          } Your mistakes to practice and your settings will be kept. This can't be undone.`}
           confirmLabel="Yes, Reset Statistics"
           cancelLabel="Keep My Statistics"
           onConfirm={confirmReset}
