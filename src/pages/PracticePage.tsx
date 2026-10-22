@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Navigate } from 'react-router';
+import { useStorage } from '../app/storageContext';
 import { Button } from '../components/common/Button';
 import { ConfirmDialog } from '../components/common/ConfirmDialog';
 import { PageContainer } from '../components/layout/PageContainer';
@@ -23,6 +24,7 @@ export function PracticePage() {
     recordResult,
     endSession,
   } = usePracticeSession();
+  const { settings } = useStorage();
   const [confirmingEnd, setConfirmingEnd] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const firstShownIndex = useRef(currentQuestionIndex);
@@ -70,6 +72,8 @@ export function PracticePage() {
             question={question}
             questionNumber={questionNumber}
             totalQuestions={totalQuestions}
+            showExplanations={settings.showExplanations}
+            animationEnabled={settings.cardAnimation}
             onResult={recordResult}
           />
         </div>

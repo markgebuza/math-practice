@@ -81,3 +81,11 @@
   background: var(--color-primary);
   color: var(--color-primary-text);
 }
+
+.choice-tile--disabled {
+  cursor: not-allowed;
+}
+
+.choice-tile--disabled:hover {
+  transform: none;
+}

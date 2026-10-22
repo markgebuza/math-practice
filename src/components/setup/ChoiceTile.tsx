@@ -9,6 +9,7 @@ interface ChoiceTileProps {
   onChange: () => void;
   symbol?: string;
   description?: string;
+  disabled?: boolean;
 }
 
 export function ChoiceTile({
@@ -20,15 +21,25 @@ export function ChoiceTile({
   onChange,
   symbol,
   description,
+  disabled = false,
 }: ChoiceTileProps) {
   return (
-    <label className={`choice-tile${checked ? ' choice-tile--selected' : ''}`}>
+    <label
+      className={[
+        'choice-tile',
+        checked && 'choice-tile--selected',
+        disabled && 'choice-tile--disabled',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
       <input
         className="visually-hidden"
         type={type}
         name={name}
         value={value}
         checked={checked}
+        disabled={disabled}
         onChange={onChange}
       />
       {symbol && (

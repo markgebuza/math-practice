@@ -57,3 +57,13 @@
   width: 100%;
   max-width: 22rem;
 }
+
+.home__notice {
+  max-width: 36rem;
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 3px solid var(--color-secondary-hover);
+  border-radius: var(--radius-md);
+  background: #fff1c7;
+  font-weight: 700;
+}

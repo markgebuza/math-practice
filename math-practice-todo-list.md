@@ -235,7 +235,7 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 -   [x] Keep front and back aligned.
 -   [x] Prevent mirrored text.
 -   [x] Respect reduced-motion preferences.
--   [ ] Add an animation setting.
+-   [x] Add an animation setting.
 
 ## Phase 7: Practice Session
 
@@ -408,28 +408,28 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 
 ### 48. Create the Settings Page
 
--   [ ] Add sound effects on/off.
--   [ ] Add card animation on/off.
--   [ ] Add explanation visibility.
--   [ ] Add default session length.
--   [ ] Add default difficulty.
--   [ ] Add default operations.
--   [ ] Add mastery threshold.
--   [ ] Persist changes.
+-   [x] Add sound effects on/off.
+-   [x] Add card animation on/off.
+-   [x] Add explanation visibility.
+-   [x] Add default session length.
+-   [x] Add default difficulty.
+-   [x] Add default operations.
+-   [x] Add mastery threshold.
+-   [x] Persist changes.
 
 ### 49. Apply Default Practice Settings
 
--   [ ] Load default operations in setup.
--   [ ] Load default difficulty and session length.
--   [ ] Allow per-session overrides.
+-   [x] Load default operations in setup.
+-   [x] Load default difficulty and session length.
+-   [x] Allow per-session overrides.
 
 ### 50. Add Clear-All-Data
 
--   [ ] Add **Clear All Application Data**.
--   [ ] Show a clear confirmation warning.
--   [ ] Clear settings, sessions, attempts, and mistake patterns.
--   [ ] Restore defaults.
--   [ ] Return to home.
+-   [x] Add **Clear All Application Data**.
+-   [x] Show a clear confirmation warning.
+-   [x] Clear settings, sessions, attempts, and mistake patterns.
+-   [x] Restore defaults.
+-   [x] Return to home.
 
 ## Phase 12: Mistake Tracking
 
@@ -577,7 +577,7 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 -   [ ] Detect `prefers-reduced-motion`.
 -   [ ] Disable flip animation when requested.
 -   [ ] Keep state changes visually clear.
--   [ ] Respect the app animation setting.
+-   [x] Respect the app animation setting.
 
 ### 69. Check Visual Accessibility
 

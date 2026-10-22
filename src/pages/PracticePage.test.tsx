@@ -122,6 +122,7 @@ describe('PracticePage', () => {
     expect(document.activeElement).toHaveClass('practice-page__card');
   });
 
+  // 19 full answer flows take ~3.5 s alone and can pass 5 s when all test files run in parallel.
   it('never shows the same question twice in a row', async () => {
     seedMathRandom(9);
     await startSession({ operations: ['multiplication'], difficulty: 1, sessionLength: 20 });
@@ -132,7 +133,7 @@ describe('PracticePage', () => {
       expect(isSameQuestion(current, previous)).toBe(false);
       previous = current;
     }
-  });
+  }, 15000);
 
   it('goes to the summary after the last question of a fixed-length session', async () => {
     const router = await startSession({

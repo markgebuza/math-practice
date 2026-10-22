@@ -12,5 +12,11 @@ export function useLocalStorage<K extends DataKey>(key: K, onSave?: (saved: bool
     [key, onSave],
   );
 
-  return [value, save] as const;
+  const reload = useCallback(() => {
+    const stored = readData(key).value;
+    setValue(stored);
+    return stored;
+  }, [key]);
+
+  return [value, save, reload] as const;
 }

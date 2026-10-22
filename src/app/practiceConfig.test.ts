@@ -1,7 +1,9 @@
+import { DEFAULT_SETTINGS } from '../types';
 import {
   allOperationsSelected,
   DEFAULT_PRACTICE_CONFIG,
   isConfigReady,
+  practiceConfigFromSettings,
   practiceConfigReducer,
   type PracticeConfig,
 } from './practiceConfig';
@@ -59,5 +61,30 @@ describe('isConfigReady', () => {
       sessionLength: 10,
     });
     expect(isConfigReady(DEFAULT_PRACTICE_CONFIG)).toBe(true);
+  });
+});
+
+describe('practiceConfigFromSettings', () => {
+  it('prefills the setup choices from the saved default settings', () => {
+    const config = practiceConfigFromSettings({
+      ...DEFAULT_SETTINGS,
+      defaultOperations: ['division', 'addition'],
+      defaultDifficulty: 3,
+      defaultSessionLength: 'continuous',
+    });
+    expect(config).toEqual({
+      operations: ['addition', 'division'],
+      difficulty: 3,
+      sessionLength: 'continuous',
+    });
+  });
+
+  it('can be reset to new defaults and then overridden for one session', () => {
+    const defaults = practiceConfigFromSettings({ ...DEFAULT_SETTINGS, defaultDifficulty: 4 });
+    const reset = practiceConfigReducer(empty, { type: 'reset', config: defaults });
+    expect(reset).toEqual(defaults);
+    expect(practiceConfigReducer(reset, { type: 'setDifficulty', difficulty: 2 }).difficulty).toBe(
+      2,
+    );
   });
 });

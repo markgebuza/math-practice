@@ -12,7 +12,8 @@ export interface PracticeSessionState {
 export type PracticeSessionAction =
   | { type: 'startSession'; session: PracticeSession; firstQuestion: Question }
   | { type: 'recordAttempt'; attempt: PracticeAttempt; nextQuestion: Question | null }
-  | { type: 'endSession'; completedAt: string };
+  | { type: 'endSession'; completedAt: string }
+  | { type: 'reset' };
 
 export const INITIAL_SESSION_STATE: PracticeSessionState = {
   currentSession: null,
@@ -77,6 +78,8 @@ export function practiceSessionReducer(
         currentQuestion: null,
         isActive: false,
       };
+    case 'reset':
+      return INITIAL_SESSION_STATE;
   }
 }
 

@@ -4,10 +4,14 @@ import { PracticeSessionContext, practiceSessionReducer } from '../app/practiceS
 import { useStorage } from '../app/storageContext';
 import type { QuestionCardResult } from '../components/practice/QuestionCard';
 import { generateNextQuestion } from '../services/questionGenerator';
+import { playSound } from '../services/soundService';
 import { recordAttempt } from '../services/statisticsService';
 import { saveSession } from '../services/storageService';
 import type { PracticeAttempt } from '../types';
 import { createId } from '../utils/ids';
+
+// Seconds; lets the answer sound finish before the session-complete tune.
+const COMPLETE_SOUND_DELAY = 0.35;
 
 // Questions are generated here, in event handlers, so the reducer stays pure and render never generates.
 export function usePracticeSession() {
@@ -16,7 +20,7 @@ export function usePracticeSession() {
     throw new Error('usePracticeSession must be used inside AppProvider');
   }
   const { state, dispatch } = value;
-  const { reportSave } = useStorage();
+  const { reportSave, settings } = useStorage();
 
   function startSession(config: PracticeConfig) {
     if (!isConfigReady(config) || config.difficulty === null) {
@@ -69,6 +73,12 @@ export function usePracticeSession() {
       return;
     }
     dispatch(action);
+    if (settings.soundEffects) {
+      playSound(selfReportedCorrect ? 'right' : 'wrong');
+      if (!next.isActive) {
+        playSound('complete', COMPLETE_SOUND_DELAY);
+      }
+    }
     // Saved right away, so an answer is kept even if the session is never finished.
     reportSave(recordAttempt(attempt) && saveSession(next.currentSession));
   }
@@ -80,6 +90,9 @@ export function usePracticeSession() {
     // DECISIONS 3.3: a session with no answers is not saved.
     if (next !== state && next.currentSession && next.currentSession.attempted > 0) {
       reportSave(saveSession(next.currentSession));
+      if (settings.soundEffects) {
+        playSound('complete');
+      }
     }
   }
 

@@ -1,9 +1,10 @@
 import { useCallback, useMemo, useReducer, useState, type ReactNode } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { initializeStorage } from '../services/storageService';
+import { clearAllData as clearStoredData, initializeStorage } from '../services/storageService';
+import type { AppSettings } from '../types';
 import {
-  DEFAULT_PRACTICE_CONFIG,
   PracticeConfigContext,
+  practiceConfigFromSettings,
   practiceConfigReducer,
   type PracticeConfig,
 } from './practiceConfig';
@@ -19,23 +20,53 @@ interface AppProviderProps {
   initialPracticeConfig?: PracticeConfig;
 }
 
-export function AppProvider({
-  children,
-  initialPracticeConfig = DEFAULT_PRACTICE_CONFIG,
-}: AppProviderProps) {
+function defaultsChanged(previous: AppSettings, next: AppSettings) {
+  return (
+    previous.defaultDifficulty !== next.defaultDifficulty ||
+    previous.defaultSessionLength !== next.defaultSessionLength ||
+    previous.defaultOperations.join() !== next.defaultOperations.join()
+  );
+}
+
+export function AppProvider({ children, initialPracticeConfig }: AppProviderProps) {
   // Runs before the first read below, so stored data is migrated before it is loaded.
   const [saveFailed, setSaveFailed] = useState(() => !initializeStorage());
   const reportSave = useCallback((saved: boolean) => setSaveFailed(!saved), []);
-  const [settings, saveSettings] = useLocalStorage('settings', reportSave);
-  const storageValue = useMemo(
-    () => ({ settings, saveSettings, saveFailed, reportSave }),
-    [settings, saveSettings, saveFailed, reportSave],
-  );
+  const [settings, writeSettings, reloadSettings] = useLocalStorage('settings', reportSave);
 
-  const [config, dispatch] = useReducer(practiceConfigReducer, initialPracticeConfig);
+  const [config, dispatch] = useReducer(
+    practiceConfigReducer,
+    undefined,
+    () => initialPracticeConfig ?? practiceConfigFromSettings(settings),
+  );
   const configValue = useMemo(() => ({ config, dispatch }), [config]);
   const [session, sessionDispatch] = useReducer(practiceSessionReducer, INITIAL_SESSION_STATE);
   const sessionValue = useMemo(() => ({ state: session, dispatch: sessionDispatch }), [session]);
+
+  // New defaults are copied into the setup choices right away, so the setup page shows them.
+  const saveSettings = useCallback(
+    (next: AppSettings) => {
+      writeSettings(next);
+      if (defaultsChanged(settings, next)) {
+        dispatch({ type: 'reset', config: practiceConfigFromSettings(next) });
+      }
+    },
+    [settings, writeSettings],
+  );
+
+  // Settings and setup choices are re-read from the cleared storage, so they go back to the defaults.
+  const clearAllData = useCallback(() => {
+    const cleared = clearStoredData();
+    reportSave(cleared);
+    dispatch({ type: 'reset', config: practiceConfigFromSettings(reloadSettings()) });
+    sessionDispatch({ type: 'reset' });
+    return cleared;
+  }, [reportSave, reloadSettings]);
+
+  const storageValue = useMemo(
+    () => ({ settings, saveSettings, saveFailed, reportSave, clearAllData }),
+    [settings, saveSettings, saveFailed, reportSave, clearAllData],
+  );
 
   return (
     <StorageContext.Provider value={storageValue}>

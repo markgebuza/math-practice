@@ -1,6 +1,7 @@
 import { usePracticeConfig } from '../../app/practiceConfig';
 import { DIFFICULTY_DESCRIPTIONS, DIFFICULTY_LEVELS, DIFFICULTY_NAMES } from '../../utils/labels';
 import { ChoiceTile } from './ChoiceTile';
+import './SetupSection.css';
 
 export function DifficultySelector() {
   const { config, dispatch } = usePracticeConfig();

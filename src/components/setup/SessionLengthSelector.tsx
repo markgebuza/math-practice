@@ -1,10 +1,7 @@
 import { SESSION_LENGTH_OPTIONS, usePracticeConfig } from '../../app/practiceConfig';
-import type { SessionLength } from '../../types';
+import { sessionLengthLabel } from '../../utils/labels';
 import { ChoiceTile } from './ChoiceTile';
-
-function sessionLengthLabel(length: SessionLength) {
-  return length === 'continuous' ? 'Keep going' : `${length} questions`;
-}
+import './SetupSection.css';
 
 export function SessionLengthSelector() {
   const { config, dispatch } = usePracticeConfig();

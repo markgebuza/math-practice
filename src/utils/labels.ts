@@ -1,4 +1,4 @@
-import type { DifficultyLevel, MathOperation } from '../types';
+import type { DifficultyLevel, MathOperation, SessionLength } from '../types';
 
 export const OPERATIONS: MathOperation[] = [
   'addition',
@@ -45,3 +45,7 @@ export const DIFFICULTY_DESCRIPTIONS: Record<DifficultyLevel, string> = {
   3: 'Numbers up to 100, multiplying up to 9 × 20',
   4: 'Big numbers up to 1,000',
 };
+
+export function sessionLengthLabel(length: SessionLength) {
+  return length === 'continuous' ? 'Keep going' : `${length} questions`;
+}

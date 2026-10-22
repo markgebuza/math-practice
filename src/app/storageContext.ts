@@ -6,6 +6,7 @@ interface StorageContextValue {
   saveSettings: (settings: AppSettings) => void;
   saveFailed: boolean;
   reportSave: (saved: boolean) => void;
+  clearAllData: () => boolean;
 }
 
 export const StorageContext = createContext<StorageContextValue | null>(null);

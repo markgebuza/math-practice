@@ -1,5 +1,5 @@
 import { createContext, useContext, type Dispatch } from 'react';
-import type { DifficultyLevel, MathOperation, SessionLength } from '../types';
+import type { AppSettings, DifficultyLevel, MathOperation, SessionLength } from '../types';
 import { DEFAULT_SETTINGS } from '../types';
 import { OPERATIONS } from '../utils/labels';
 
@@ -13,15 +13,20 @@ export type PracticeConfigAction =
   | { type: 'toggleOperation'; operation: MathOperation }
   | { type: 'setAllOperations'; selected: boolean }
   | { type: 'setDifficulty'; difficulty: DifficultyLevel }
-  | { type: 'setSessionLength'; sessionLength: SessionLength };
+  | { type: 'setSessionLength'; sessionLength: SessionLength }
+  | { type: 'reset'; config: PracticeConfig };
 
 export const SESSION_LENGTH_OPTIONS: SessionLength[] = [5, 10, 20, 'continuous'];
 
-export const DEFAULT_PRACTICE_CONFIG: PracticeConfig = {
-  operations: DEFAULT_SETTINGS.defaultOperations,
-  difficulty: DEFAULT_SETTINGS.defaultDifficulty,
-  sessionLength: DEFAULT_SETTINGS.defaultSessionLength,
-};
+export function practiceConfigFromSettings(settings: AppSettings): PracticeConfig {
+  return {
+    operations: OPERATIONS.filter((op) => settings.defaultOperations.includes(op)),
+    difficulty: settings.defaultDifficulty,
+    sessionLength: settings.defaultSessionLength,
+  };
+}
+
+export const DEFAULT_PRACTICE_CONFIG = practiceConfigFromSettings(DEFAULT_SETTINGS);
 
 export function practiceConfigReducer(
   state: PracticeConfig,
@@ -42,6 +47,8 @@ export function practiceConfigReducer(
       return { ...state, difficulty: action.difficulty };
     case 'setSessionLength':
       return { ...state, sessionLength: action.sessionLength };
+    case 'reset':
+      return action.config;
   }
 }
 

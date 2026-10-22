@@ -1,6 +1,7 @@
 import { allOperationsSelected, usePracticeConfig } from '../../app/practiceConfig';
 import { OPERATION_LABELS, OPERATION_SYMBOLS, OPERATIONS } from '../../utils/labels';
 import { ChoiceTile } from './ChoiceTile';
+import './SetupSection.css';
 
 export function OperationSelector() {
   const { config, dispatch } = usePracticeConfig();

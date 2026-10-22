@@ -1,5 +1,7 @@
+import { useLocation } from 'react-router';
 import { ButtonLink } from '../components/common/Button';
 import { PageContainer } from '../components/layout/PageContainer';
+import type { HomeRedirectState } from './SettingsPage';
 import './HomePage.css';
 
 const SYMBOLS = [
@@ -10,9 +12,18 @@ const SYMBOLS = [
 ];
 
 export function HomePage() {
+  const redirectState = useLocation().state as HomeRedirectState | null;
+
   return (
     <PageContainer title="Math Practice">
       <div className="home">
+        {redirectState && (
+          <p className="home__notice" role="status">
+            {redirectState.dataCleared
+              ? 'All app data was cleared. Everything is back to how it started.'
+              : "Some app data couldn't be cleared on this device. Please try again later."}
+          </p>
+        )}
         <div className="home__symbols" aria-hidden="true">
           {SYMBOLS.map(({ symbol, className }) => (
             <span key={symbol} className={`home__symbol ${className}`}>
