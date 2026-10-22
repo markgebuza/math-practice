@@ -641,24 +641,24 @@ Routes: `/`, `/practice/setup`, `/practice/session`,
 ### 76. Handle Invalid Stored Data
 
 -   [x] Detect invalid settings, attempts, sessions, and patterns.
--   [ ] Reset only the affected data category.
--   [ ] Avoid application crashes.
+-   [x] Reset only the affected data category.
+-   [x] Avoid application crashes.
 
 ### 77. Handle Question-Generation Failures
 
--   [ ] Validate every generated question.
--   [ ] Retry invalid generation.
--   [ ] Set a maximum retry count.
--   [ ] Provide a fallback question.
--   [ ] Log useful development errors.
+-   [x] Validate every generated question.
+-   [x] Retry invalid generation.
+-   [x] Set a maximum retry count.
+-   [x] Provide a fallback question.
+-   [x] Log useful development errors.
 
 ### 78. Add User-Friendly Error Messages
 
--   [ ] Create a general error component.
--   [ ] Explain storage errors simply.
--   [ ] Explain missing-session errors.
--   [ ] Provide a safe return-home action.
--   [ ] Avoid showing technical stack traces.
+-   [x] Create a general error component.
+-   [x] Explain storage errors simply.
+-   [x] Explain missing-session errors.
+-   [x] Provide a safe return-home action.
+-   [x] Avoid showing technical stack traces.
 
 ## Phase 20: Testing
 

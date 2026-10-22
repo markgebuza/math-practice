@@ -1,5 +1,6 @@
 import type { DifficultyLevel, MathOperation, Question } from '../types';
 import { createId } from '../utils/ids';
+import { logDevelopmentError } from '../utils/logError';
 import { OPERATION_SYMBOLS, OPERATIONS } from '../utils/labels';
 import { randomInt, randomItem } from '../utils/math';
 import { shuffle } from '../utils/shuffle';
@@ -93,6 +94,25 @@ function buildQuestion(operation: MathOperation, difficulty: DifficultyLevel): Q
   return createQuestion(operation, firstOperand, secondOperand, difficulty);
 }
 
+// Facts that fit every level's ranges (DECISIONS 1), except × at level 4, which needs a bigger factor.
+const FALLBACK_OPERANDS: Record<MathOperation, Operands> = {
+  addition: [3, 4],
+  subtraction: [9, 4],
+  multiplication: [3, 4],
+  division: [6, 3],
+};
+
+export function createFallbackQuestion(
+  operation: MathOperation,
+  difficulty: DifficultyLevel,
+): Question {
+  const [first, second] =
+    operation === 'multiplication' && difficulty === 4 ? [12, 3] : FALLBACK_OPERANDS[operation];
+  return createQuestion(operation, first, second, difficulty);
+}
+
+// Retries invalid questions up to MAX_GENERATION_ATTEMPTS, then uses a known-valid fallback
+// so the child always gets a card.
 export function generateQuestion(operation: MathOperation, difficulty: DifficultyLevel): Question {
   if (!OPERATIONS.includes(operation)) {
     throw new QuestionGenerationError(`Unsupported operation: ${String(operation)}`);
@@ -102,15 +122,24 @@ export function generateQuestion(operation: MathOperation, difficulty: Difficult
   }
   let errors: string[] = [];
   for (let attempt = 0; attempt < MAX_GENERATION_ATTEMPTS; attempt++) {
-    const question = buildQuestion(operation, difficulty);
-    errors = validateQuestion(question);
-    if (errors.length === 0) {
-      return question;
+    try {
+      const question = buildQuestion(operation, difficulty);
+      errors = validateQuestion(question);
+      if (errors.length === 0) {
+        return question;
+      }
+    } catch (error) {
+      if (!(error instanceof QuestionGenerationError)) {
+        throw error;
+      }
+      errors = [error.message];
     }
   }
-  throw new QuestionGenerationError(
-    `Could not generate a valid ${operation} question at level ${difficulty}: ${errors.join('; ')}`,
+  logDevelopmentError(
+    `Could not generate a valid ${operation} question at level ${difficulty} after ${MAX_GENERATION_ATTEMPTS} attempts; using a fallback question.`,
+    errors,
   );
+  return createFallbackQuestion(operation, difficulty);
 }
 
 // Each question picks one of the selected operations at random (DECISIONS 4.1).

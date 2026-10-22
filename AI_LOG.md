@@ -641,3 +641,44 @@ router (createBrowserRouter). Switch to it if needed and confirm all routes stil
 - The setup page's choices are not saved; the running session stores its own operations, level and length, which is all it needs. The cheering message above the card is not restored after a refresh (it is only about the previous answer).
 - If the app is reopened on another page with an unfinished session saved, nothing on Home points to it; going to `/practice/session` (or the summary page's Keep Practicing) continues it, and starting a new session replaces it. A "Continue your session" button could be added later.
 - Browsers don't let pages customize the close/refresh warning text, and jsdom can't show it, so only `preventDefault` on the event was tested. Real-browser behavior needs your check (item 4).
+
+### [2026-10-21 23:32] Phase 19: Error Handling
+**My prompt:** Implement Phase 19 (tasks 76–78). Add an error boundary with a friendly message and a
+Return Home button (no stack traces shown to children). Test each case in spec
+section 16, including corrupted data in one storage category resetting only that
+category, and a forced generation failure falling back to a valid question.
+
+**What you did:**
+- Run by a Claude Code subagent using the Phase 19 prompt from PROMPTS.md (not manually tested by me before commit).
+- Audited spec 16 first. Already handled before this phase: per-key validation and reset (`storageService.ts`), the storage warning banner, the missing-session redirect, summary empty states, statistics rebuilt from attempts, duplicate-choice protection. Missing: generation had a retry limit but then **threw** (and a division operand failure was not retried), so a bad run would crash the page; there was no fallback question, no development logging and no error boundary.
+- Question generation (`src/services/questionGenerator.ts`): `generateQuestion` still retries up to `MAX_GENERATION_ATTEMPTS` (20), now also counting a failing operand generator as a failed try; after the limit it logs the reason (development only) and returns `createFallbackQuestion`, a fixed fact that fits every level (3 + 4, 9 − 4, 3 × 4 or 12 × 3 at level 4, 6 ÷ 3) with normal distractors. Unsupported operations/levels still throw (programming errors). Review questions use the same fallback through `generateQuestion`. New `src/utils/logError.ts` (`logDevelopmentError`, logs only when `import.meta.env.DEV`).
+- Error UI: new general `ErrorMessage` (`src/components/common/ErrorMessage.tsx`: heading, simple child-friendly message, **Return Home** button, never the error text), `ErrorPage` (`src/pages/ErrorPage.tsx`) set as `errorElement` on the root route in `AppRoutes.tsx` (Return Home navigates to `/`, which clears the route error), and a class `ErrorBoundary` (`src/components/common/ErrorBoundary.tsx`) around `AppProvider` in `App.tsx` for errors outside the router (Return Home there reloads `/`, so state is re-read from validated storage). `main.tsx` passes `onCaughtError`/`onUncaughtError` to `createRoot` and `App.tsx` passes `onError` to `RouterProvider`, so details go to `console.error` once and only in development (React and React Router would otherwise log in production too).
+- Tests: rewrote `questionGenerator.retry.test.ts` (forced `validateQuestion` failure for all 4 operations × 4 levels falls back to a question that passes the real validator; dev log checked; fallback always valid; unsupported input still rejected; review question fallback); new `src/app/StorageRecovery.test.tsx` (each of the 5 categories corrupted in turn: the app opens Statistics, that category is reset (statistics are rebuilt from attempts), the other 4 keys are byte-for-byte unchanged — stored with indentation so any rewrite would show); new `src/pages/ErrorPage.test.tsx` (mocked Statistics page throws: friendly page, no error text/stack, title set, Return Home shows Home with the header, page works again later); new `src/components/common/ErrorBoundary.test.tsx`. Expected `console.error` noise is silenced with spies.
+- Spec 16 coverage:
+
+| Spec 16 case | Where handled | Test |
+|---|---|---|
+| Invalid locally stored data | `storageService.ts` `readData`/parsers (settings field by field, lists drop bad records) | `storageService.test.ts` "corrupted %s / resets only that key", "recovers invalid settings field by field", "keeps the valid records of a list"; new `StorageRecovery.test.tsx` |
+| Missing session data | `PracticePage.tsx` redirect; `SessionSummaryPage.tsx` empty state; `loadActiveSession` drops invalid saved sessions | `PracticePage.test.tsx` "redirects to setup with a friendly message…"; `SessionSummaryPage.test.tsx` "shows a friendly message when opened with no session"; `PracticePage.recovery.test.tsx` broken JSON / non-session data |
+| Question-generation failures | `questionGenerator.ts` retry limit + `createFallbackQuestion` + dev log; `similarQuestionGenerator.ts` falls back to `generateQuestion` | `questionGenerator.retry.test.ts` (all) |
+| Duplicate answer choices | `distractors.ts` (Set + safe fallback); `validateQuestion` rejects duplicates | `distractors.test.ts` "four unique non-negative whole choices…"; `validation.test.ts` "requires exactly four unique choices…" |
+| Unsupported or full storage | `storageService.ts` (never throws) + `StorageWarning.tsx` | `storageService.test.ts` "when storage fails"; `PracticePage.storage.test.tsx` "when storage throws" (3 tests) |
+| Corrupted statistics | `statisticsService.ts` `loadStatistics` rebuilds from attempts | `statisticsService.test.ts` "rebuilds corrupted totals…"; `StatisticsPage.test.tsx` "rebuilds the totals…"; `StorageRecovery.test.tsx` "statistics" case |
+| Unexpected navigation to the practice page | `PracticePage.tsx` redirect to setup with notice | `PracticePage.test.tsx` "redirects to setup…" |
+| (Any other render error) | `ErrorPage` errorElement + `ErrorBoundary` | `ErrorPage.test.tsx`, `ErrorBoundary.test.tsx` |
+
+- Commands: `npx prettier --write .`, `npm run lint`, `npm test -- --run`, `npm run build`; screenshots with a temporary `/crash` route added to `AppRoutes.tsx`, built, served with `vite preview`, then reverted and rebuilt (the rebuilt bundle hash matched the pre-change build).
+
+**Verification:**
+- `npm run lint`: pass, 0 errors, 0 warnings.
+- `npm test -- --run`: 39 files, 493/493 passed (448 before; 45 new: 34 more in the retry file, 5 storage recovery, 3 error page, 3 error boundary). All passed on the first full run.
+- `npm run build`: pass (JS 379.95 kB, 116.81 kB gzip).
+- Screenshot (375 and 1280 px iframes, temporary crash route): "Oops! Something Went Wrong", the message and a large blue Return Home button inside the dashed card; no error text; at 375 px the heading wraps to two lines and nothing overflows.
+- TODO: checked all items of tasks 76, 77 and 78.
+- Manual checklist for you: (1) To see the error page, temporarily add a route that throws (e.g. in `AppRoutes.tsx`: `{ path: 'crash', Component: () => { throw new Error('x'); } }`), run `npm run dev`, open `/crash`: friendly page, no stack trace on screen; the details appear in the browser console (dev only). Click Return Home: Home with the header. Remove the route afterwards. (2) With `npm run build && npm run preview` the same page shows nothing in the console. (3) In DevTools > Application > Local Storage, change `mathPractice.sessions` to `oops` and reload Statistics: the page works, Recent sessions is empty, your totals and mistakes are still there. (4) Open `/practice/session` directly: you're sent to setup with "Let's get your cards ready!".
+
+**Problems / open issues:**
+- Not covered by DECISIONS (chose the conservative option): the fallback questions are fixed, easy facts (e.g. 3 + 4) so they are valid at every level; they only appear if generation fails 20 times in a row, which the tests show never happens with the real generator. If the fallback repeats, the "no immediate repeat" rule (DECISIONS 7) may be broken in that extreme case.
+- The route error page replaces the whole layout (it is the root route's `errorElement`), so the header is not shown on it; Return Home is the way out. Route Return Home navigates inside the app instead of reloading; if the crash was caused by in-memory state, the outer boundary's reload is not used. The outer boundary's reload (`window.location.assign`) can't run in jsdom, so only its reset/handler call was tested.
+- The storage banner and the missing-session notice were already simple and are inline (not blocking), so they keep their own components instead of `ErrorMessage`.
+- The "Not implemented: HTMLCanvasElement's getContext()" lines in the test output come from axe in existing tests and are not failures.

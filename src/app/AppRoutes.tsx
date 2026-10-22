@@ -1,5 +1,6 @@
 import type { RouteObject } from 'react-router';
 import { AppLayout } from '../components/layout/AppLayout';
+import { ErrorPage } from '../pages/ErrorPage';
 import { HomePage } from '../pages/HomePage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { PracticePage } from '../pages/PracticePage';
@@ -12,6 +13,7 @@ export const routes: RouteObject[] = [
   {
     path: '/',
     element: <AppLayout />,
+    errorElement: <ErrorPage />,
     children: [
       { index: true, element: <HomePage /> },
       { path: 'practice/setup', element: <PracticeSetupPage /> },
