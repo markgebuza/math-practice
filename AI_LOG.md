@@ -852,3 +852,15 @@ Confirm with `git status` and `git ls-files` that no secrets or .env files are t
 - "Detect missing or older versions" (task 36) can't be exercised until a schema version 2 exists.
 - The "Suggested First Implementation Sequence" checklist at the end of the TODO is a summary of earlier phases and was left as-is.
 - `public/favicon.svg` is still the default Vite logo.
+
+### [2026-10-22 17:19] Push to GitHub
+**My prompt:** https://github.com/markgebuza/math-practice
+**What you did:**
+- Ran the PROMPTS.md "Push to GitHub" step with this URL: `git remote add origin https://github.com/markgebuza/math-practice.git`, then `git push -u origin main`.
+- Authentication worked with the stored Git credentials; no workaround was needed. `main` now tracks `origin/main`.
+- Appended this entry and pushed it as a follow-up commit.
+**Verification:**
+- Push output: `* [new branch] main -> main`.
+- Manual: open https://github.com/markgebuza/math-practice and check that the README shows and the commit history runs from Phase 1 to Phase 22.
+**Problems / open issues:**
+- Netlify deploy (task 89) and manual browser testing (task 87) are still for you.
